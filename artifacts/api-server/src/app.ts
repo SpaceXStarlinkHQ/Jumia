@@ -31,4 +31,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
+// Redirect root to the store
+app.get("/", (_req, res) => {
+  res.redirect(301, "/store/");
+});
+
 export default app;
