@@ -1,0 +1,1 @@
+- [Store architecture](store-arch.md) — online store with Paystack; key design decisions and route conventions
