@@ -20,44 +20,58 @@ const categoryIcons: Record<string, any> = {
   "Electronics": Laptop
 };
 
+// Promo ends 2 days after the store launched (July 21 2026 00:00 UTC + 48 h)
+const PROMO_END = new Date("2026-07-23T23:59:59Z").getTime();
+
 function FlashSaleTimer() {
-  const [timeLeft, setTimeLeft] = useState("");
+  const [parts, setParts] = useState<{ d: string; h: string; m: string; s: string } | null>(null);
 
   useEffect(() => {
-    // 8 hours from now
-    const target = new Date().getTime() + 8 * 60 * 60 * 1000;
-    
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const diff = target - now;
+    function tick() {
+      const diff = PROMO_END - Date.now();
       if (diff <= 0) {
-        setTimeLeft("00:00:00");
-        clearInterval(interval);
+        setParts({ d: "00", h: "00", m: "00", s: "00" });
         return;
       }
-      const h = Math.floor(diff / (1000 * 60 * 60));
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const s = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeLeft(
-        `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-      );
-    }, 1000);
-    return () => clearInterval(interval);
+      setParts({
+        d: d.toString().padStart(2, '0'),
+        h: h.toString().padStart(2, '0'),
+        m: m.toString().padStart(2, '0'),
+        s: s.toString().padStart(2, '0'),
+      });
+    }
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
+
+  const seg = (v: string, label: string) => (
+    <div className="flex flex-col items-center">
+      <span className="bg-[#E53935] text-white px-2 py-0.5 rounded shadow-sm leading-tight font-bold tabular-nums">{v}</span>
+      <span className="text-white/70 text-[9px] mt-0.5 uppercase tracking-wider">{label}</span>
+    </div>
+  );
 
   return (
     <div className="flex items-center gap-1 font-bold text-lg">
-      <span className="text-white text-sm mr-2 hidden sm:inline font-medium tracking-wide">Time Left:</span>
-      <div className="flex items-center gap-1">
-        {timeLeft ? timeLeft.split(':').map((part, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <span className="text-white/80">:</span>}
-            <span className="bg-[#E53935] text-white px-2 py-0.5 rounded shadow-sm leading-tight">
-              {part}
-            </span>
-          </React.Fragment>
-        )) : (
-          <span className="bg-[#E53935] text-white px-2 py-0.5 rounded shadow-sm leading-tight">08:00:00</span>
+      <span className="text-white text-sm mr-2 hidden sm:inline font-medium tracking-wide">Ends in:</span>
+      <div className="flex items-center gap-1.5">
+        {parts ? (
+          <>
+            {seg(parts.d, "days")}
+            <span className="text-white/80 mb-2">:</span>
+            {seg(parts.h, "hrs")}
+            <span className="text-white/80 mb-2">:</span>
+            {seg(parts.m, "min")}
+            <span className="text-white/80 mb-2">:</span>
+            {seg(parts.s, "sec")}
+          </>
+        ) : (
+          <span className="bg-[#E53935] text-white px-2 py-0.5 rounded shadow-sm leading-tight">--:--:--:--</span>
         )}
       </div>
     </div>
@@ -107,8 +121,8 @@ export default function Catalog() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full translate-x-1/3 -translate-y-1/3" />
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-black opacity-[0.03] rounded-full -translate-x-1/4 translate-y-1/4" />
               
-              <h2 className="text-white text-5xl md:text-6xl font-black mb-2 relative z-10 drop-shadow-md">Up to 50% OFF</h2>
-              <p className="text-white/90 text-lg md:text-xl font-medium mb-6 relative z-10">Shop the best deals today</p>
+              <h2 className="text-white text-5xl md:text-6xl font-black mb-2 relative z-10 drop-shadow-md">Up to 80% OFF</h2>
+              <p className="text-white/90 text-lg md:text-xl font-medium mb-6 relative z-10">2-Day Flash Promo — Limited time only!</p>
               <button className="bg-white text-[#F68B1E] px-8 py-3 rounded text-sm font-bold shadow-lg hover:bg-gray-50 transition-colors relative z-10 uppercase">
                 Shop Now
               </button>

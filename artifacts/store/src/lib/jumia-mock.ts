@@ -1,6 +1,6 @@
-export function getDiscount(productId: number) {
-  const pcts = [10, 15, 20, 25, 30, 35, 40, 45];
-  return pcts[productId % pcts.length];
+// Promo: 80% off for all products
+export function getDiscount(_productId: number) {
+  return 80;
 }
 
 export function getOriginalPrice(priceKobo: number, productId: number) {

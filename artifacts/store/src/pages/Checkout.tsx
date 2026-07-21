@@ -33,7 +33,8 @@ export default function Checkout() {
 
   const onSubmit = (data: CheckoutForm) => {
     const baseUrl = window.location.origin + import.meta.env.BASE_URL.replace(/\/$/, '');
-    const callbackUrl = `${baseUrl}/orders/`; 
+    // Paystack will append ?reference=xxx to this URL on redirect
+    const callbackUrl = `${baseUrl}/orders`;
     
     initiateCheckout.mutate({
       data: {

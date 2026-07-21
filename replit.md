@@ -10,6 +10,7 @@ A full-stack e-commerce store with Paystack payments, product catalog, cart, che
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/db run seed` — seed the database with the 6 promo products (clears existing rows first)
 
 ## Required Environment Variables / Secrets
 

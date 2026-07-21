@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import crypto from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db, productsTable, ordersTable, orderItemsTable } from "@workspace/db";
 import {
   InitiateCheckoutBody,
@@ -40,30 +40,24 @@ router.post("/checkout/initiate", async (req, res): Promise<void> => {
 
   const { customerEmail, customerName, items, callbackUrl } = parsed.data;
 
-  // Fetch all products and validate stock
+  // Fetch all products in a single query
   const productIds = items.map((i) => i.productId);
-  const products = await db
+  const fetchedProducts = await db
     .select()
     .from(productsTable)
-    .where(
-      productIds.length === 1
-        ? eq(productsTable.id, productIds[0])
-        : // Use a subquery-friendly approach for multiple ids
-          eq(productsTable.id, productIds[0]) // handled below
-    );
+    .where(inArray(productsTable.id, productIds));
 
-  // Re-fetch each product individually for multi-product carts
-  const productMap = new Map<number, typeof products[0]>();
+  const productMap = new Map<number, typeof fetchedProducts[0]>();
+  for (const p of fetchedProducts) {
+    productMap.set(p.id, p);
+  }
+
+  // Verify every requested product exists
   for (const pid of productIds) {
-    const [p] = await db
-      .select()
-      .from(productsTable)
-      .where(eq(productsTable.id, pid));
-    if (!p) {
+    if (!productMap.has(pid)) {
       res.status(400).json({ error: `Product ${pid} not found` });
       return;
     }
-    productMap.set(pid, p);
   }
 
   // Calculate total
