@@ -119,8 +119,8 @@ IN THE BOX: Generator, user manual, toolkit (spanners, screwdriver), funnel, war
     ],
   },
   {
-    name: "Hisense 43\" Full HD Smart TV — 43A4200H",
-    description: `Transform your living room with the Hisense 43" Full HD Smart TV. Enjoy crisp picture quality, built-in streaming apps, and seamless DSTV/GOtv connectivity — all in one stylish, slim panel.
+    name: '43" LG/Hisense Television Set',
+    description: `Transform your living room with the 43" LG/Hisense Television Set. Enjoy crisp picture quality, built-in streaming apps, and seamless DSTV/GOtv connectivity — all in one stylish, slim panel.
 
 KEY FEATURES:
 • 43-inch Full HD (1920×1080) LED display — vivid colours and sharp detail
