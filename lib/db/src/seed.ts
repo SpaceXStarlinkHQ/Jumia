@@ -519,7 +519,7 @@ DIMENSIONS (per dumbbell at max weight): 37cm × 17cm × 16cm`,
   },
 ];
 
-async function seed() {
+export async function seedProducts(): Promise<number> {
   console.log("🌱  Seeding products…");
 
   await db.delete(productsTable);
@@ -536,10 +536,13 @@ async function seed() {
     console.log(`   [${p.id}] ${p.name} — ${naira} — ${p.images.length} image(s) — ${p.category}`);
   }
 
-  process.exit(0);
+  return inserted.length;
 }
 
-seed().catch((err) => {
-  console.error("Seed failed:", err);
-  process.exit(1);
-});
+// Run directly when invoked as a script
+if (process.argv[1]?.endsWith("seed.ts") || process.argv[1]?.endsWith("seed.js")) {
+  seedProducts().then(() => process.exit(0)).catch((err) => {
+    console.error("Seed failed:", err);
+    process.exit(1);
+  });
+}
