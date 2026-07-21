@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useListOrders } from "@workspace/api-client-react";
+import { useListOrders, useGetStoreSummary } from "@workspace/api-client-react";
 import { formatNaira } from "@/lib/utils";
 import { Link } from "wouter";
-import { Search, Package, Clock, CheckCircle2, Truck, XCircle, ArrowRight } from "lucide-react";
+import { Search, Package, CheckCircle2, Truck, XCircle, ArrowRight, MapPin, Clock } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
@@ -14,6 +14,8 @@ export default function Dashboard() {
     { query: { enabled: !!submittedEmail } }
   );
 
+  const { data: summary } = useGetStoreSummary();
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) {
@@ -21,109 +23,121 @@ export default function Dashboard() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'paid': return <CheckCircle2 className="w-4 h-4 text-blue-500" />;
-      case 'shipped': return <Truck className="w-4 h-4 text-purple-500" />;
-      case 'delivered': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
-      default: return <Package className="w-4 h-4" />;
+      case 'pending': return "bg-[#FFF3E0] text-[#E65100]";
+      case 'paid': return "bg-[#E8F5E9] text-[#2E7D32]";
+      case 'shipped': return "bg-[#E3F2FD] text-[#1565C0]";
+      case 'delivered': return "bg-[#E8F5E9] text-[#2E7D32]";
+      case 'cancelled': return "bg-[#FFEBEE] text-[#C62828]";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getStatusStyle = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 'paid': return "bg-blue-100 text-blue-800 border-blue-200";
-      case 'shipped': return "bg-purple-100 text-purple-800 border-purple-200";
-      case 'delivered': return "bg-green-100 text-green-800 border-green-200";
-      case 'cancelled': return "bg-red-100 text-red-800 border-red-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case 'pending': return <Clock className="w-3.5 h-3.5" />;
+      case 'paid': return <CheckCircle2 className="w-3.5 h-3.5" />;
+      case 'shipped': return <Truck className="w-3.5 h-3.5" />;
+      case 'delivered': return <CheckCircle2 className="w-3.5 h-3.5" />;
+      case 'cancelled': return <XCircle className="w-3.5 h-3.5" />;
+      default: return <Package className="w-3.5 h-3.5" />;
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
-      <div className="text-center max-w-2xl mx-auto mb-12">
-        <h1 className="text-3xl font-bold tracking-tight mb-4">Track Your Orders</h1>
-        <p className="text-muted-foreground mb-8">
-          Enter the email address you used during checkout to view your order history and tracking status.
+    <div className="max-w-4xl mx-auto pb-12 mt-4">
+      {/* Hero Banner */}
+      <div className="bg-gradient-to-br from-[#F68B1E] to-[#FF8C00] rounded shadow-sm p-8 text-center text-white mb-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-black opacity-10 rounded-full -translate-x-1/4 translate-y-1/4" />
+        
+        <MapPin className="w-12 h-12 mx-auto mb-3 opacity-90 drop-shadow-sm" />
+        <h1 className="text-2xl md:text-3xl font-black mb-2 relative z-10 drop-shadow-md">Track Your Order</h1>
+        <p className="text-white/90 text-sm max-w-lg mx-auto relative z-10 font-medium">
+          Enter the email address you used during checkout to view your order history, tracking status, and delivery updates.
         </p>
+        {summary && summary.totalProducts > 0 && (
+          <p className="text-white/80 text-xs mt-4 relative z-10 font-medium tracking-wide">
+            Join thousands of customers shopping from our {summary.totalProducts}+ products.
+          </p>
+        )}
+      </div>
 
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-md mx-auto relative">
-          <input
-            type="email"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-5 py-3.5 bg-card border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
-            required
-          />
+      {/* Search Box */}
+      <div className="bg-white rounded shadow-sm border border-gray-100 p-6 mb-6">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="email"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded focus:outline-none focus:border-[#F68B1E] text-sm"
+              required
+            />
+          </div>
           <button 
             type="submit"
-            className="absolute right-1.5 top-1.5 bottom-1.5 px-6 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+            className="px-8 py-3 bg-[#F68B1E] text-white font-bold uppercase text-sm rounded hover:bg-[#E07B10] shadow-md transition-colors whitespace-nowrap"
           >
-            Lookup <Search className="w-4 h-4 hidden sm:block" />
+            Track Orders
           </button>
         </form>
       </div>
 
+      {/* Results */}
       {submittedEmail && (
-        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-          <h2 className="font-bold text-xl flex items-center justify-between border-b pb-4">
-            Orders for {submittedEmail}
-            {orders && <span className="text-sm font-normal text-muted-foreground px-3 py-1 bg-muted rounded-full">{orders.length} found</span>}
-          </h2>
+        <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h2 className="font-bold text-gray-800 text-sm uppercase">Orders for {submittedEmail}</h2>
+            {orders && <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-bold">{orders.length}</span>}
+          </div>
 
           {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-32 bg-card border rounded-xl animate-pulse" />
+            <div className="p-4 space-y-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-24 bg-gray-100 animate-pulse rounded border border-gray-200" />
               ))}
             </div>
           ) : orders && orders.length > 0 ? (
-            <div className="space-y-4">
+            <div className="divide-y divide-gray-100">
               {orders.map((order) => (
-                <div key={order.id} className="bg-card border rounded-xl p-5 sm:p-6 hover:shadow-md transition-shadow group">
-                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-                    <div>
+                <div key={order.id} className="p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4">
+                    <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="font-mono text-sm font-medium bg-muted px-2 py-0.5 rounded">
-                          {order.paystackReference}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {format(new Date(order.createdAt), 'MMM d, yyyy h:mm a')}
+                        <span className="font-bold text-gray-900 text-sm">Order {order.paystackReference}</span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getStatusColor(order.status)}`}>
+                          {getStatusIcon(order.status)} {order.status}
                         </span>
                       </div>
-                      <h3 className="font-bold text-xl">{formatNaira(order.totalKobo)}</h3>
-                    </div>
-                    <div className="flex flex-col sm:items-end gap-2">
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold capitalize border ${getStatusStyle(order.status)}`}>
-                        {getStatusIcon(order.status)} {order.status}
+                      <div className="text-xs text-gray-500 mb-2">
+                        Placed on {format(new Date(order.createdAt), 'MMM d, yyyy')}
+                      </div>
+                      <div className="text-sm font-bold text-[#F68B1E]">
+                        {formatNaira(order.totalKobo)}
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground line-clamp-1 max-w-[70%]">
-                      {order.customerName}
-                    </span>
-                    <Link 
-                      href={`/orders/${order.paystackReference}`}
-                      className="text-primary text-sm font-semibold flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity"
-                    >
-                      View Receipt <ArrowRight className="w-4 h-4" />
-                    </Link>
+                    <div className="flex items-center sm:items-start justify-between sm:flex-col sm:justify-center">
+                      <span className="text-xs text-gray-500 sm:hidden">{order.items?.length || 0} items</span>
+                      <Link 
+                        href={`/orders/${order.paystackReference}`}
+                        className="text-[#F68B1E] text-sm font-bold flex items-center gap-1 hover:underline uppercase"
+                      >
+                        View Details <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-muted/20 border rounded-2xl">
-              <Package className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-              <h3 className="text-lg font-medium">No orders found</h3>
-              <p className="text-muted-foreground mt-1">We couldn't find any orders matching this email.</p>
+            <div className="text-center py-16">
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-800">No orders found</h3>
+              <p className="text-sm text-gray-500 mt-1">We couldn't find any orders matching this email.</p>
             </div>
           )}
         </div>

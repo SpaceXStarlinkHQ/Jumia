@@ -12,7 +12,6 @@ import Cart from '@/pages/Cart';
 import Checkout from '@/pages/Checkout';
 import OrderConfirmation from '@/pages/OrderConfirmation';
 import Dashboard from '@/pages/Dashboard';
-import Admin from '@/pages/Admin';
 
 const queryClient = new QueryClient();
 
@@ -26,7 +25,6 @@ function Router() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/orders/:reference" component={OrderConfirmation} />
         <Route path="/dashboard" component={Dashboard} />
-        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </PageWrapper>

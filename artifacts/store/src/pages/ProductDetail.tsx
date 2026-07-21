@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
-import { useGetProduct } from "@workspace/api-client-react";
+import { useGetProduct, useListProducts } from "@workspace/api-client-react";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShoppingCart, Package, Plus, Minus } from "lucide-react";
+import { ChevronRight, ShoppingCart, Package, Plus, Minus, Star, Truck, ShieldCheck } from "lucide-react";
+import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
+import React from "react";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +15,13 @@ export default function ProductDetail() {
   const { data: product, isLoading, error } = useGetProduct(productId, {
     query: { enabled: !isNaN(productId), queryKey: ["/api/products", productId] }
   });
+  
+  // Fetch related products for "You May Also Like"
+  const { data: relatedProducts } = useListProducts(
+    { category: product?.category },
+    { query: { enabled: !!product?.category } }
+  );
+
   const { addItem } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
@@ -23,13 +32,16 @@ export default function ProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-1/2 aspect-square bg-muted rounded-2xl" />
-        <div className="w-full md:w-1/2 space-y-4 pt-4">
-          <div className="h-4 bg-muted rounded w-1/4" />
-          <div className="h-10 bg-muted rounded w-3/4" />
-          <div className="h-6 bg-muted rounded w-1/3" />
-          <div className="h-32 bg-muted rounded w-full mt-8" />
+      <div className="animate-pulse space-y-4">
+        <div className="h-4 bg-gray-200 w-1/3 rounded" />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-[480px] aspect-square bg-gray-200 rounded border border-gray-100" />
+          <div className="w-full md:w-1/2 space-y-4 pt-2">
+            <div className="h-8 bg-gray-200 rounded w-3/4" />
+            <div className="h-6 bg-gray-200 rounded w-1/4" />
+            <div className="h-10 bg-gray-200 rounded w-1/2 mt-4" />
+            <div className="h-32 bg-gray-200 rounded w-full mt-6" />
+          </div>
         </div>
       </div>
     );
@@ -37,13 +49,19 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold mb-2">Product Not Found</h2>
-        <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
-        <Link href="/" className="text-primary font-medium hover:underline">Return to Catalog</Link>
+      <div className="bg-white p-12 text-center rounded shadow-sm border border-gray-100">
+        <Package className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Product Not Found</h2>
+        <p className="text-gray-500 mb-6">The product you're looking for doesn't exist.</p>
+        <Link href="/" className="bg-[#F68B1E] text-white px-6 py-2.5 rounded font-bold uppercase text-sm inline-block hover:bg-[#E07B10]">Return to Home</Link>
       </div>
     );
   }
+
+  const origPrice = getOriginalPrice(product.priceKobo, product.id);
+  const discount = getDiscount(product.id);
+  const rating = getRating(product.id);
+  const reviewCount = getReviewCount(product.id);
 
   const handleAddToCart = () => {
     addItem({
@@ -55,7 +73,7 @@ export default function ProductDetail() {
     });
     toast({
       title: "Added to cart",
-      description: `${quantity}x ${product.name} added to your cart.`,
+      description: `${quantity}x ${product.name} added.`,
     });
   };
 
@@ -71,87 +89,179 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back to Catalog
-      </Link>
+    <div className="pb-10">
+      <div className="flex items-center text-xs text-gray-500 mb-4 gap-2 whitespace-nowrap overflow-hidden text-ellipsis">
+        <Link href="/" className="hover:text-gray-800">Home</Link>
+        <ChevronRight className="w-3 h-3" />
+        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-800 capitalize">
+          {product.category}
+        </Link>
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-gray-800 truncate">{product.name}</span>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
-        <div className="aspect-square bg-muted rounded-2xl overflow-hidden border">
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        {/* Left Image Panel */}
+        <div className="w-full md:w-[400px] lg:w-[480px] shrink-0 bg-white p-4 rounded shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px]">
           {product.imageUrl ? (
             <img 
               src={product.imageUrl} 
               alt={product.name} 
-              className="w-full h-full object-cover"
+              className="w-full max-w-[400px] aspect-square object-contain mix-blend-multiply"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50">
-              <Package className="w-16 h-16 mb-2" />
-              <span className="text-sm">No image available</span>
+            <div className="w-full aspect-square flex flex-col items-center justify-center text-gray-300">
+              <Package className="w-24 h-24 mb-4 opacity-50" />
             </div>
           )}
         </div>
 
-        <div className="flex flex-col pt-2 lg:pt-8">
-          <div className="text-sm font-medium text-primary mb-2 capitalize tracking-wide">{product.category}</div>
-          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">{product.name}</h1>
-          <div className="text-3xl font-semibold mb-6">{formatNaira(product.priceKobo)}</div>
+        {/* Right Details Panel */}
+        <div className="flex-1 bg-white p-4 sm:p-6 rounded shadow-sm border border-gray-100 flex flex-col">
+          <div className="flex justify-between items-start mb-2">
+            <h1 className="text-xl sm:text-2xl font-medium text-gray-800 leading-snug">{product.name}</h1>
+          </div>
           
-          <div className="prose prose-sm md:prose-base text-muted-foreground mb-8">
-            <p>{product.description || "No description provided for this product."}</p>
+          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
+            <div className="flex text-[#F5A623]">
+              {[1,2,3,4,5].map(star => (
+                <Star key={star} className={`w-4 h-4 ${star <= Math.floor(rating) ? 'fill-current' : 'text-gray-300'}`} />
+              ))}
+            </div>
+            <Link href="/" className="text-sm text-blue-600 hover:underline">({reviewCount} verified ratings)</Link>
           </div>
 
-          <div className="mt-auto border-t pt-8">
-            {product.stock > 0 ? (
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium">Quantity</span>
-                  <div className="flex items-center border rounded-lg h-10">
-                    <button 
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-full flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors"
-                      disabled={quantity <= 1}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-12 text-center font-medium">{quantity}</span>
-                    <button 
-                      onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                      className="w-10 h-full flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors"
-                      disabled={quantity >= product.stock}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {product.stock} available
-                  </span>
-                </div>
+          <div className="mb-6">
+            <div className="flex items-end gap-3 mb-1">
+              <span className="text-3xl font-bold text-gray-900 leading-none">{formatNaira(product.priceKobo)}</span>
+              <span className="text-gray-400 line-through text-lg">{formatNaira(origPrice)}</span>
+              <span className="bg-red-100 text-[#E53935] text-xs font-bold px-2 py-0.5 rounded">-{discount}%</span>
+            </div>
+            <div className="text-xs text-gray-500 mb-2">Few units left</div>
+            <div className="flex items-center text-[#3CB64A] text-sm font-medium uppercase tracking-wide gap-1.5 mt-2">
+              <Truck className="w-4 h-4" /> FREE Delivery
+            </div>
+          </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button 
-                    onClick={handleAddToCart}
-                    className="flex-1 py-3.5 px-6 bg-secondary text-secondary-foreground font-semibold rounded-xl hover:bg-secondary/80 transition-colors border"
-                  >
-                    Add to Cart
-                  </button>
-                  <button 
-                    onClick={handleBuyNow}
-                    className="flex-1 py-3.5 px-6 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-                  >
-                    Buy it Now
-                  </button>
-                </div>
+          <div className="mb-6">
+            <span className="text-sm font-medium text-gray-800 mb-2 block">Quantity</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center border border-gray-300 rounded h-10 w-32">
+                <button 
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors"
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="flex-1 text-center font-medium">{quantity}</span>
+                <button 
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-[#F68B1E] transition-colors"
+                  disabled={quantity >= product.stock}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
-            ) : (
-              <div className="p-4 bg-muted rounded-xl text-center">
-                <h3 className="font-semibold text-foreground">Out of Stock</h3>
-                <p className="text-sm text-muted-foreground mt-1">Check back later for restocks.</p>
+              <span className="text-sm font-medium text-[#3CB64A]">
+                In Stock ({product.stock} units)
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 mb-8 pb-8 border-b border-gray-100 mt-auto">
+            <button 
+              onClick={handleAddToCart}
+              disabled={product.stock === 0}
+              className="flex-1 py-3 px-6 bg-[#F68B1E] text-white font-bold rounded shadow-md hover:bg-[#E07B10] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm uppercase"
+            >
+              <ShoppingCart className="w-5 h-5 fill-current" /> ADD TO CART
+            </button>
+            <button 
+              onClick={handleBuyNow}
+              disabled={product.stock === 0}
+              className="flex-1 py-3 px-6 bg-[#FFCF00] text-black font-bold rounded shadow-md hover:bg-[#E5BA00] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm uppercase"
+            >
+              BUY NOW
+            </button>
+          </div>
+
+          <div className="bg-gray-50 rounded border border-gray-100 p-4">
+            <div className="text-xs text-gray-500 uppercase font-bold mb-2">Sold by</div>
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-800 text-lg">Jumia</span>
+              <span className="border border-[#F68B1E] text-[#F68B1E] text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" /> JUMIA VERIFIED
+              </span>
+            </div>
+            <div className="flex items-center gap-6 mt-3 text-sm">
+              <div className="flex flex-col">
+                <span className="font-bold text-gray-800">92%</span>
+                <span className="text-gray-500 text-xs">Seller Score</span>
               </div>
-            )}
+              <div className="flex flex-col">
+                <span className="font-bold text-gray-800">100k+</span>
+                <span className="text-gray-500 text-xs">Followers</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Description section */}
+      <div className="bg-white rounded shadow-sm border border-gray-100 mb-4 overflow-hidden">
+        <h3 className="bg-white text-gray-800 font-medium px-4 py-3 border-b border-gray-100 text-lg">Product Details</h3>
+        <div className="p-4 sm:p-6 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+          {product.description || "No description provided for this product. Check back later for more details from the seller."}
+        </div>
+      </div>
+
+      {/* You May Also Like */}
+      {relatedProducts && relatedProducts.length > 1 && (
+        <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
+          <h3 className="bg-white text-gray-800 font-medium px-4 py-3 border-b border-gray-100 text-lg">You May Also Like</h3>
+          <div className="p-2 overflow-x-auto no-scrollbar">
+            <div className="flex gap-2 min-w-max pb-2">
+              {relatedProducts.filter(p => p.id !== product.id).map(rp => {
+                const rpOrigPrice = getOriginalPrice(rp.priceKobo, rp.id);
+                const rpDiscount = getDiscount(rp.id);
+                const rpRating = getRating(rp.id);
+                
+                return (
+                  <Link key={rp.id} href={`/products/${rp.id}`} className="w-[180px] shrink-0 p-2 hover:shadow-md transition-shadow rounded group bg-white flex flex-col border border-transparent hover:border-gray-200 relative">
+                    <div className="absolute top-2 right-2 bg-red-100 text-[#E53935] text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
+                      -{rpDiscount}%
+                    </div>
+                    <div className="aspect-square relative mb-2">
+                      {rp.imageUrl ? (
+                        <img src={rp.imageUrl} alt={rp.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 rounded">
+                          <Package className="w-8 h-8 opacity-50" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <h4 className="text-[13px] text-gray-800 line-clamp-2 leading-tight group-hover:text-[#F68B1E] mb-1">{rp.name}</h4>
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="flex text-[#F5A623]">
+                          {[1,2,3,4,5].map(star => (
+                            <Star key={star} className={`w-2.5 h-2.5 ${star <= Math.floor(rpRating) ? 'fill-current' : 'text-gray-300'}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-auto">
+                        <div className="font-bold text-[#F68B1E] text-[15px] leading-none mb-1">{formatNaira(rp.priceKobo)}</div>
+                        <div className="text-xs text-gray-400 line-through decoration-gray-400">{formatNaira(rpOrigPrice)}</div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
