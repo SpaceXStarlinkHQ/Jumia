@@ -12,7 +12,7 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-const PAYSTACK_SECRET = process.env.PICATIC_API_KEY ?? process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_SECRET = process.env.PAYSTER_SECRET_API_KEY ?? process.env.PICATIC_API_KEY ?? process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE = "https://api.paystack.co";
 
 function paystackHeaders() {
