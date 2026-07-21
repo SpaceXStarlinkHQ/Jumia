@@ -10,7 +10,7 @@ description: Online store with Paystack payments — key decisions, gotchas, and
 - Codegen: `pnpm --filter @workspace/api-spec run codegen` → `lib/api-client-react` + `lib/api-zod`
 
 ## Paystack integration
-- Secret stored as `PAYSTACK_SECRET_KEY` Replit Secret (runtime-managed — do NOT set manually)
+- Secret stored as `PAYSTACK_API_KEY` Replit Secret (runtime-managed — do NOT set manually)
 - Initialize: POST `https://api.paystack.co/transaction/initialize` with `{ email, amount (kobo), reference, callback_url }`
 - Verify: GET `https://api.paystack.co/transaction/verify/:reference`
 - Webhook: POST `/api/checkout/webhook` — HMAC SHA512 signature check with `PAYSTACK_SECRET_KEY`
