@@ -160,10 +160,10 @@ export default function Catalog() {
             </div>
             
             <div className="p-2 overflow-x-auto no-scrollbar">
-              <div className="flex gap-2 min-w-max pb-2">
+              <div className="flex gap-2 pb-2" style={{width: 'max-content'}}>
                 {isLoadingProducts ? (
                   [1,2,3,4,5].map(i => (
-                    <div key={i} className="w-[180px] shrink-0 p-2 space-y-2">
+                    <div key={i} className="w-[148px] sm:w-[180px] shrink-0 p-2 space-y-2">
                       <div className="aspect-square bg-gray-200 animate-pulse rounded" />
                       <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4" />
                       <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2" />
@@ -175,7 +175,7 @@ export default function Catalog() {
                   const rating = getRating(product.id);
                   
                   return (
-                    <Link key={product.id} href={`/products/${product.id}`} className="w-[180px] shrink-0 p-2 hover:shadow-md transition-shadow rounded group relative bg-white flex flex-col border border-transparent hover:border-gray-100">
+                    <Link key={product.id} href={`/products/${product.id}`} className="w-[148px] sm:w-[180px] shrink-0 p-2 hover:shadow-md transition-shadow rounded group relative bg-white flex flex-col border border-transparent hover:border-gray-100">
                       <div className="absolute top-2 right-2 bg-[#E53935] text-white text-xs font-bold px-1.5 py-0.5 rounded z-10">
                         -{discount}%
                       </div>
