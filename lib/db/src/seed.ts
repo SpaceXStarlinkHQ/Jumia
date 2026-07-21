@@ -274,7 +274,7 @@ Hisense TV (43"), remote control, stand, power cable, user manual, batteries.`,
     imageUrl: "https://images.unsplash.com/photo-1593359677879-a4bb92f4834c?w=600&q=80",
     images: [
       "https://images.unsplash.com/photo-1593359677879-a4bb92f4834c?w=600&q=80",
-      "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=600&q=80",
+      "https://images.unsplash.com/photo-1552975084-6e027cd345c2?w=600&q=80",
       "https://images.unsplash.com/photo-1615863836843-f6c00cf61f43?w=600&q=80",
     ],
   },
@@ -333,8 +333,8 @@ Dell Inspiron 15, 65W power adapter, user guide.`,
     imageUrl: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=600&q=80",
     images: [
       "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=600&q=80",
-      "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&q=80",
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80",
+      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=600&q=80",
+      "https://images.unsplash.com/photo-1484788984921-03950022c38b?w=600&q=80",
     ],
   },
   {
@@ -388,7 +388,7 @@ HP LaserJet MFP M428fdw, USB cable, power cord, toner cartridge (starter), docum
     images: [
       "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=600&q=80",
       "https://images.unsplash.com/photo-1586171555626-15e40ece8ae5?w=600&q=80",
-      "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&q=80",
+      "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&q=80",
     ],
   },
 
@@ -530,7 +530,7 @@ Indoor unit, outdoor unit, remote control, batteries, installation kit, user man
     images: [
       "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=600&q=80",
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=600&q=80",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80",
+      "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=600&q=80",
     ],
   },
   {
