@@ -169,7 +169,16 @@ export default function Catalog() {
                       <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2" />
                     </div>
                   ))
-                ) : products?.slice(0, 6).map(product => {
+                ) : [...(products ?? [])]
+                    .sort((a, b) => {
+                      // Pin Deep Freezer (21) and Generator (24) to front of Flash Sales
+                      const priority: Record<number, number> = { 21: 0, 24: 1 };
+                      const pa = priority[a.id] ?? 99;
+                      const pb = priority[b.id] ?? 99;
+                      return pa - pb;
+                    })
+                    .slice(0, 6)
+                    .map(product => {
                   const origPrice = getOriginalPrice(product.priceKobo, product.id);
                   const discount = getDiscount(product.id);
                   const rating = getRating(product.id);
