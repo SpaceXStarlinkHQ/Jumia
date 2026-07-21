@@ -21,6 +21,8 @@ export interface Product {
   priceKobo: number;
   /** @nullable */
   imageUrl: string | null;
+  /** Up to 3 product image URLs shown in the detail gallery */
+  images: string[];
   stock: number;
   category: string;
   createdAt: string;
@@ -34,6 +36,7 @@ export interface ProductInput {
   /** @minimum 1 */
   priceKobo: number;
   imageUrl?: string;
+  images?: string[];
   /** @minimum 0 */
   stock: number;
   /** @minLength 1 */
@@ -47,6 +50,7 @@ export interface ProductUpdate {
   /** @minimum 1 */
   priceKobo?: number;
   imageUrl?: string;
+  images?: string[];
   /** @minimum 0 */
   stock?: number;
   category?: string;

@@ -376,7 +376,7 @@ components:
     # ── Product ──────────────────────────────────────────────────────────────
     Product:
       type: object
-      required: [id, name, description, priceKobo, imageUrl, stock, category, createdAt, updatedAt]
+      required: [id, name, description, priceKobo, imageUrl, images, stock, category, createdAt, updatedAt]
       properties:
         id:
           type: integer
@@ -389,6 +389,12 @@ components:
           description: Price in kobo (smallest currency unit)
         imageUrl:
           type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+          default: []
+          description: Up to 3 product image URLs shown in the detail gallery
         stock:
           type: integer
         category:
@@ -414,6 +420,11 @@ components:
           minimum: 1
         imageUrl:
           type: string
+        images:
+          type: array
+          items:
+            type: string
+          default: []
         stock:
           type: integer
           minimum: 0
@@ -434,6 +445,10 @@ components:
           minimum: 1
         imageUrl:
           type: string
+        images:
+          type: array
+          items:
+            type: string
         stock:
           type: integer
           minimum: 0

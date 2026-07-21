@@ -179,8 +179,8 @@ export default function Catalog() {
                         -{discount}%
                       </div>
                       <div className="aspect-square relative mb-2">
-                        {product.imageUrl ? (
-                          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
+                        {(product.images?.[0] || product.imageUrl) ? (
+                          <img src={product.images?.[0] || product.imageUrl!} alt={product.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
                         ) : (
                           <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 rounded">
                             <Package className="w-10 h-10 opacity-50" />
@@ -260,9 +260,9 @@ export default function Catalog() {
                   </div>
                   <Link href={`/products/${product.id}`} className="block flex-1 flex flex-col">
                     <div className="aspect-square relative mb-3">
-                      {product.imageUrl ? (
+                      {(product.images?.[0] || product.imageUrl) ? (
                         <img 
-                          src={product.imageUrl} 
+                          src={product.images?.[0] || product.imageUrl!} 
                           alt={product.name} 
                           className="object-cover w-full h-full mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                         />

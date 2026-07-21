@@ -14,6 +14,8 @@ export interface Product {
   priceKobo: number;
   /** @nullable */
   imageUrl: string | null;
+  /** Up to 3 product image URLs shown in the detail gallery */
+  images: string[];
   stock: number;
   category: string;
   createdAt: Date;

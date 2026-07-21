@@ -13,6 +13,7 @@ export interface ProductInput {
   /** @minimum 1 */
   priceKobo: number;
   imageUrl?: string;
+  images?: string[];
   /** @minimum 0 */
   stock: number;
   /** @minLength 1 */

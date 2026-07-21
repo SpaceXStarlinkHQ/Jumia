@@ -25,12 +25,15 @@ export const ListProductsQueryParams = zod.object({
   "search": zod.coerce.string().optional()
 })
 
+export const listProductsResponseImagesDefault = [];
+
 export const ListProductsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string(),
   "priceKobo": zod.number().describe('Price in kobo (smallest currency unit)'),
   "imageUrl": zod.string().nullable(),
+  "images": zod.array(zod.string()).default(listProductsResponseImagesDefault).describe('Up to 3 product image URLs shown in the detail gallery'),
   "stock": zod.number(),
   "category": zod.string(),
   "createdAt": zod.coerce.date(),
@@ -44,6 +47,7 @@ export const ListProductsResponse = zod.array(ListProductsResponseItem)
  */
 
 
+export const createProductBodyImagesDefault = [];
 export const createProductBodyStockMin = 0;
 
 
@@ -54,9 +58,12 @@ export const CreateProductBody = zod.object({
   "description": zod.string(),
   "priceKobo": zod.number().min(1),
   "imageUrl": zod.string().optional(),
+  "images": zod.array(zod.string()).default(createProductBodyImagesDefault),
   "stock": zod.number().min(createProductBodyStockMin),
   "category": zod.string().min(1)
 })
+
+export const createProductResponseImagesDefault = [];
 
 export const CreateProductResponse = zod.object({
   "id": zod.number(),
@@ -64,6 +71,7 @@ export const CreateProductResponse = zod.object({
   "description": zod.string(),
   "priceKobo": zod.number().describe('Price in kobo (smallest currency unit)'),
   "imageUrl": zod.string().nullable(),
+  "images": zod.array(zod.string()).default(createProductResponseImagesDefault).describe('Up to 3 product image URLs shown in the detail gallery'),
   "stock": zod.number(),
   "category": zod.string(),
   "createdAt": zod.coerce.date(),
@@ -78,12 +86,15 @@ export const GetProductParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const getProductResponseImagesDefault = [];
+
 export const GetProductResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string(),
   "priceKobo": zod.number().describe('Price in kobo (smallest currency unit)'),
   "imageUrl": zod.string().nullable(),
+  "images": zod.array(zod.string()).default(getProductResponseImagesDefault).describe('Up to 3 product image URLs shown in the detail gallery'),
   "stock": zod.number(),
   "category": zod.string(),
   "createdAt": zod.coerce.date(),
@@ -109,9 +120,12 @@ export const UpdateProductBody = zod.object({
   "description": zod.string().optional(),
   "priceKobo": zod.number().min(1).optional(),
   "imageUrl": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
   "stock": zod.number().min(updateProductBodyStockMin).optional(),
   "category": zod.string().optional()
 })
+
+export const updateProductResponseImagesDefault = [];
 
 export const UpdateProductResponse = zod.object({
   "id": zod.number(),
@@ -119,6 +133,7 @@ export const UpdateProductResponse = zod.object({
   "description": zod.string(),
   "priceKobo": zod.number().describe('Price in kobo (smallest currency unit)'),
   "imageUrl": zod.string().nullable(),
+  "images": zod.array(zod.string()).default(updateProductResponseImagesDefault).describe('Up to 3 product image URLs shown in the detail gallery'),
   "stock": zod.number(),
   "category": zod.string(),
   "createdAt": zod.coerce.date(),

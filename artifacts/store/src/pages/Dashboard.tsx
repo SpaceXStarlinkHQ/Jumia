@@ -11,7 +11,7 @@ export default function Dashboard() {
 
   const { data: orders, isLoading } = useListOrders(
     { email: submittedEmail },
-    { query: { enabled: !!submittedEmail } }
+    { query: { enabled: !!submittedEmail, queryKey: ["/api/orders", { email: submittedEmail }] } }
   );
 
   const { data: summary } = useGetStoreSummary();
@@ -121,7 +121,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center sm:items-start justify-between sm:flex-col sm:justify-center">
-                      <span className="text-xs text-gray-500 sm:hidden">{order.items?.length || 0} items</span>
+                      <span className="text-xs text-gray-500 sm:hidden">View order</span>
                       <Link 
                         href={`/orders/${order.paystackReference}`}
                         className="text-[#F68B1E] text-sm font-bold flex items-center gap-1 hover:underline uppercase"

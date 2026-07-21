@@ -12,12 +12,12 @@ export default function OrderConfirmation() {
 
   // Trigger payment verification in the background
   const { data: verificationResult } = useVerifyPayment(reference || "", {
-    query: { enabled: !!reference }
+    query: { enabled: !!reference, queryKey: ["/api/checkout/verify", reference] }
   });
 
   // Always use getOrderByReference for display
   const { data: order, isLoading, error } = useGetOrderByReference(reference || "", {
-    query: { enabled: !!reference }
+    query: { enabled: !!reference, queryKey: ["/api/orders/reference", reference] }
   });
 
   // Clear cart if paid

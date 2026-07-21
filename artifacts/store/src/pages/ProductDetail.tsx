@@ -4,7 +4,7 @@ import { useGetProduct, useListProducts } from "@workspace/api-client-react";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronRight, ShoppingCart, Package, Plus, Minus, Star, Truck, ShieldCheck } from "lucide-react";
+import { ChevronRight, ShoppingCart, Package, Plus, Minus, Star, Truck, ShieldCheck, ZoomIn } from "lucide-react";
 import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
 import React from "react";
 
@@ -15,16 +15,16 @@ export default function ProductDetail() {
   const { data: product, isLoading, error } = useGetProduct(productId, {
     query: { enabled: !isNaN(productId), queryKey: ["/api/products", productId] }
   });
-  
-  // Fetch related products for "You May Also Like"
+
   const { data: relatedProducts } = useListProducts(
     { category: product?.category },
-    { query: { enabled: !!product?.category } }
+    { query: { enabled: !!product?.category, queryKey: ["/api/products", { category: product?.category }] } }
   );
 
   const { addItem } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
 
   if (isNaN(productId)) {
     return <div>Invalid product ID</div>;
@@ -35,7 +35,12 @@ export default function ProductDetail() {
       <div className="animate-pulse space-y-4">
         <div className="h-4 bg-gray-200 w-1/3 rounded" />
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full md:w-[480px] aspect-square bg-gray-200 rounded border border-gray-100" />
+          <div className="w-full md:w-[480px] space-y-2">
+            <div className="aspect-square bg-gray-200 rounded border border-gray-100" />
+            <div className="flex gap-2">
+              {[1,2,3].map(i => <div key={i} className="w-20 h-20 bg-gray-200 rounded" />)}
+            </div>
+          </div>
           <div className="w-full md:w-1/2 space-y-4 pt-2">
             <div className="h-8 bg-gray-200 rounded w-3/4" />
             <div className="h-6 bg-gray-200 rounded w-1/4" />
@@ -63,18 +68,24 @@ export default function ProductDetail() {
   const rating = getRating(product.id);
   const reviewCount = getReviewCount(product.id);
 
+  // Build full image list: prefer images array, fall back to imageUrl
+  const allImages: string[] = (product.images && product.images.length > 0)
+    ? product.images
+    : product.imageUrl
+      ? [product.imageUrl]
+      : [];
+
+  const mainImage = allImages[selectedImageIdx] ?? null;
+
   const handleAddToCart = () => {
     addItem({
       productId: product.id,
       productName: product.name,
       quantity,
       unitPriceKobo: product.priceKobo,
-      imageUrl: product.imageUrl,
+      imageUrl: allImages[0] ?? product.imageUrl,
     });
-    toast({
-      title: "Added to cart",
-      description: `${quantity}x ${product.name} added.`,
-    });
+    toast({ title: "Added to cart", description: `${quantity}x ${product.name} added.` });
   };
 
   const handleBuyNow = () => {
@@ -83,52 +94,89 @@ export default function ProductDetail() {
       productName: product.name,
       quantity,
       unitPriceKobo: product.priceKobo,
-      imageUrl: product.imageUrl,
+      imageUrl: allImages[0] ?? product.imageUrl,
     });
     setLocation("/cart");
   };
 
   return (
     <div className="pb-10">
-      <div className="flex items-center text-xs text-gray-500 mb-4 gap-2 whitespace-nowrap overflow-hidden text-ellipsis">
+      {/* Breadcrumb */}
+      <div className="flex items-center text-xs text-gray-500 mb-4 gap-2 whitespace-nowrap overflow-hidden">
         <Link href="/" className="hover:text-gray-800">Home</Link>
-        <ChevronRight className="w-3 h-3" />
-        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-800 capitalize">
+        <ChevronRight className="w-3 h-3 shrink-0" />
+        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-800 capitalize truncate">
           {product.category}
         </Link>
-        <ChevronRight className="w-3 h-3" />
+        <ChevronRight className="w-3 h-3 shrink-0" />
         <span className="text-gray-800 truncate">{product.name}</span>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-4">
-        {/* Left Image Panel */}
-        <div className="w-full md:w-[400px] lg:w-[480px] shrink-0 bg-white p-4 rounded shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px]">
-          {product.imageUrl ? (
-            <img 
-              src={product.imageUrl} 
-              alt={product.name} 
-              className="w-full max-w-[400px] aspect-square object-contain mix-blend-multiply"
-            />
-          ) : (
-            <div className="w-full aspect-square flex flex-col items-center justify-center text-gray-300">
-              <Package className="w-24 h-24 mb-4 opacity-50" />
+        {/* Left: Image gallery */}
+        <div className="w-full md:w-[400px] lg:w-[480px] shrink-0 space-y-2">
+          {/* Main image */}
+          <div className="bg-white rounded shadow-sm border border-gray-100 p-4 flex items-center justify-center min-h-[300px] md:min-h-[380px] relative group overflow-hidden">
+            {mainImage ? (
+              <>
+                <img
+                  key={mainImage}
+                  src={mainImage}
+                  alt={`${product.name} — view ${selectedImageIdx + 1}`}
+                  className="w-full max-w-[380px] aspect-square object-contain mix-blend-multiply transition-all duration-300"
+                />
+                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-full p-1.5">
+                  <ZoomIn className="w-4 h-4 text-white" />
+                </div>
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-3 left-3 bg-black/30 text-white text-[11px] font-medium px-2 py-0.5 rounded-full">
+                    {selectedImageIdx + 1} / {allImages.length}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="w-full aspect-square flex flex-col items-center justify-center text-gray-300">
+                <Package className="w-24 h-24 mb-4 opacity-50" />
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {allImages.length > 1 && (
+            <div className="flex gap-2">
+              {allImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedImageIdx(idx)}
+                  className={`w-[80px] h-[80px] shrink-0 rounded border-2 overflow-hidden bg-white flex items-center justify-center transition-all duration-150 ${
+                    selectedImageIdx === idx
+                      ? "border-[#F68B1E] shadow-sm"
+                      : "border-gray-200 hover:border-gray-400"
+                  }`}
+                  aria-label={`View image ${idx + 1}`}
+                >
+                  <img
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className="w-full h-full object-contain mix-blend-multiply p-1"
+                  />
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Right Details Panel */}
+        {/* Right: Details */}
         <div className="flex-1 bg-white p-4 sm:p-6 rounded shadow-sm border border-gray-100 flex flex-col">
-          <div className="flex justify-between items-start mb-2">
-            <h1 className="text-xl sm:text-2xl font-medium text-gray-800 leading-snug">{product.name}</h1>
-          </div>
-          
+          <h1 className="text-xl sm:text-2xl font-medium text-gray-800 leading-snug mb-2">{product.name}</h1>
+
           <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
             <div className="flex text-[#F5A623]">
               {[1,2,3,4,5].map(star => (
                 <Star key={star} className={`w-4 h-4 ${star <= Math.floor(rating) ? 'fill-current' : 'text-gray-300'}`} />
               ))}
             </div>
-            <Link href="/" className="text-sm text-blue-600 hover:underline">({reviewCount} verified ratings)</Link>
+            <span className="text-sm text-blue-600 hover:underline cursor-pointer">({reviewCount} verified ratings)</span>
           </div>
 
           <div className="mb-6">
@@ -147,7 +195,7 @@ export default function ProductDetail() {
             <span className="text-sm font-medium text-gray-800 mb-2 block">Quantity</span>
             <div className="flex items-center gap-4">
               <div className="flex items-center border border-gray-300 rounded h-10 w-32">
-                <button 
+                <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors"
                   disabled={quantity <= 1}
@@ -155,7 +203,7 @@ export default function ProductDetail() {
                   <Minus className="w-4 h-4" />
                 </button>
                 <span className="flex-1 text-center font-medium">{quantity}</span>
-                <button 
+                <button
                   onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                   className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-[#F68B1E] transition-colors"
                   disabled={quantity >= product.stock}
@@ -163,21 +211,19 @@ export default function ProductDetail() {
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
-              <span className="text-sm font-medium text-[#3CB64A]">
-                In Stock ({product.stock} units)
-              </span>
+              <span className="text-sm font-medium text-[#3CB64A]">In Stock ({product.stock} units)</span>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-8 pb-8 border-b border-gray-100 mt-auto">
-            <button 
+            <button
               onClick={handleAddToCart}
               disabled={product.stock === 0}
               className="flex-1 py-3 px-6 bg-[#F68B1E] text-white font-bold rounded shadow-md hover:bg-[#E07B10] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm uppercase"
             >
               <ShoppingCart className="w-5 h-5 fill-current" /> ADD TO CART
             </button>
-            <button 
+            <button
               onClick={handleBuyNow}
               disabled={product.stock === 0}
               className="flex-1 py-3 px-6 bg-[#FFCF00] text-black font-bold rounded shadow-md hover:bg-[#E5BA00] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm uppercase"
@@ -226,15 +272,16 @@ export default function ProductDetail() {
                 const rpOrigPrice = getOriginalPrice(rp.priceKobo, rp.id);
                 const rpDiscount = getDiscount(rp.id);
                 const rpRating = getRating(rp.id);
-                
+                const rpImg = (rp.images && rp.images.length > 0) ? rp.images[0] : rp.imageUrl;
+
                 return (
                   <Link key={rp.id} href={`/products/${rp.id}`} className="w-[180px] shrink-0 p-2 hover:shadow-md transition-shadow rounded group bg-white flex flex-col border border-transparent hover:border-gray-200 relative">
                     <div className="absolute top-2 right-2 bg-red-100 text-[#E53935] text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
                       -{rpDiscount}%
                     </div>
                     <div className="aspect-square relative mb-2">
-                      {rp.imageUrl ? (
-                        <img src={rp.imageUrl} alt={rp.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
+                      {rpImg ? (
+                        <img src={rpImg} alt={rp.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
                       ) : (
                         <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 rounded">
                           <Package className="w-8 h-8 opacity-50" />
