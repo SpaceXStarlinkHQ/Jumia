@@ -102,14 +102,14 @@ export default function ProductDetail() {
   return (
     <div className="pb-10">
       {/* Breadcrumb */}
-      <div className="flex items-center text-xs text-gray-500 mb-4 gap-2 whitespace-nowrap overflow-hidden">
-        <Link href="/" className="hover:text-gray-800">Home</Link>
+      <div className="flex items-center text-xs text-gray-500 mb-4 gap-1.5 min-w-0">
+        <Link href="/" className="hover:text-gray-800 shrink-0">Home</Link>
         <ChevronRight className="w-3 h-3 shrink-0" />
-        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-800 capitalize truncate">
+        <Link href={`/?category=${encodeURIComponent(product.category)}`} className="hover:text-gray-800 capitalize shrink-0">
           {product.category}
         </Link>
         <ChevronRight className="w-3 h-3 shrink-0" />
-        <span className="text-gray-800 truncate">{product.name}</span>
+        <span className="text-gray-800 font-medium truncate min-w-0">{product.name}</span>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-4">
