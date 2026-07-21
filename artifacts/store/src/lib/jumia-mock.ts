@@ -1,6 +1,6 @@
-// Promo: 80% off for all products
+// Promo: 65% off for all products
 export function getDiscount(_productId: number) {
-  return 80;
+  return 65;
 }
 
 export function getOriginalPrice(priceKobo: number, productId: number) {
