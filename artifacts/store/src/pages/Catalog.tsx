@@ -203,22 +203,6 @@ export default function Catalog() {
             </div>
           </div>
 
-          {/* Top Categories */}
-          <div className="bg-white rounded shadow-sm p-4 mt-4 border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 text-center mb-4">Shop by Category</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
-              {isLoadingCategories ? (
-                [1,2,3,4,5].map(i => <div key={i} className="aspect-square bg-gray-100 animate-pulse rounded" />)
-              ) : categories?.map(c => (
-                <Link key={c} href={`/?category=${encodeURIComponent(c)}`} className="flex flex-col items-center p-4 rounded hover:bg-gray-50 transition-colors border border-gray-100 text-center group">
-                  <div className="w-12 h-12 rounded-full bg-orange-50 text-[#F68B1E] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    {categoryIcons[c] ? React.createElement(categoryIcons[c], { className: "w-6 h-6" }) : <Package className="w-6 h-6" />}
-                  </div>
-                  <span className="text-[13px] font-medium text-gray-700 group-hover:text-[#F68B1E] capitalize">{c}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
         </>
       )}
 
