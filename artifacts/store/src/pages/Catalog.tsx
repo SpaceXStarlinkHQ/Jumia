@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useListProducts, useListCategories } from "@workspace/api-client-react";
 import { formatNaira } from "@/lib/utils";
 import { ShoppingCart, ChevronRight, Laptop, Smartphone, Shirt, Home, ShoppingBag, Coffee, Heart, Dumbbell, Baby, Package, Star } from "lucide-react";
@@ -80,7 +80,8 @@ function FlashSaleTimer() {
 
 export default function Catalog() {
   const [loc] = useLocation();
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchString = useSearch();          // reacts to query-string changes
+  const searchParams = new URLSearchParams(searchString);
   const search = searchParams.get("search") || "";
   const category = searchParams.get("category") || "";
 

@@ -29,11 +29,11 @@ Tecno Camon 40 Pro 5G, 45W charger, USB-C cable, protective case, screen protect
     priceKobo: 18_900_000,
     category: "Phones & Tablets",
     stock: 47,
-    imageUrl: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?w=600&q=80",
     images: [
-      "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&q=80",
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80",
-      "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&q=80",
+      "https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?w=600&q=80",
+      "https://images.unsplash.com/photo-1533228100845-08145b01de14?w=600&q=80",
+      "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600&q=80",
     ],
   },
   {
@@ -449,6 +449,7 @@ Pair with platform wedges and statement gold jewellery for a complete traditiona
   {
     name: "Men's Genuine Leather Chronograph Watch",
     description:
+
       `Make a statement on the wrist that says sophistication without saying a word. This men's genuine leather chronograph watch combines Japanese quartz precision with Italian leather craftsmanship.
 
 KEY FEATURES:
@@ -467,10 +468,10 @@ Watch, extra pin for sizing, polishing cloth, presentation box.`,
     priceKobo: 1_850_000,
     category: "Fashion",
     stock: 45,
-    imageUrl: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1690040172816-a8a6a0f1b994?w=600&q=80",
     images: [
-      "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=80",
-      "https://images.unsplash.com/photo-1612817288484-6f916006741a?w=600&q=80",
+      "https://images.unsplash.com/photo-1690040172816-a8a6a0f1b994?w=600&q=80",
+      "https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=600&q=80",
       "https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&q=80",
     ],
   },
