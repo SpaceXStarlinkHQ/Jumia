@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import crypto from "crypto";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { db, productsTable, ordersTable, orderItemsTable } from "@workspace/db";
 import {
   InitiateCheckoutBody,
@@ -12,9 +12,7 @@ import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
-const PAYSTACK_SECRET = (
-  process.env.PAYSTER_SECRET_API_KEY ?? process.env.PICATIC_API_KEY ?? process.env.PAYSTACK_SECRET_KEY ?? ""
-).trim().replace(/^Bearer\s+/i, "");
+const PAYSTACK_SECRET = (process.env.PAYSTACK_SECRET_KEY ?? "").trim().replace(/^Bearer\s+/i, "");
 const PAYSTACK_BASE = "https://api.paystack.co";
 
 function paystackHeaders() {
@@ -206,6 +204,14 @@ router.get("/checkout/verify/:reference", async (req, res): Promise<void> => {
     .from(orderItemsTable)
     .where(eq(orderItemsTable.orderId, updatedOrder.id));
 
+  // Decrement stock for each item
+  for (const item of items) {
+    await db
+      .update(productsTable)
+      .set({ stock: sql`GREATEST(stock - ${item.quantity}, 0)`, updatedAt: new Date() })
+      .where(eq(productsTable.id, item.productId));
+  }
+
   req.log.info({ orderId: updatedOrder.id, reference }, "Payment verified");
 
   res.json(VerifyPaymentResponse.parse({ ...updatedOrder, items }));
@@ -233,10 +239,24 @@ router.post("/checkout/webhook", async (req, res): Promise<void> => {
 
   if (event.event === "charge.success") {
     const { reference } = event.data;
-    await db
+    const [paidOrder] = await db
       .update(ordersTable)
       .set({ status: "paid", updatedAt: new Date() })
-      .where(eq(ordersTable.paystackReference, reference));
+      .where(eq(ordersTable.paystackReference, reference))
+      .returning();
+
+    if (paidOrder) {
+      const orderItems = await db
+        .select()
+        .from(orderItemsTable)
+        .where(eq(orderItemsTable.orderId, paidOrder.id));
+      for (const item of orderItems) {
+        await db
+          .update(productsTable)
+          .set({ stock: sql`GREATEST(stock - ${item.quantity}, 0)`, updatedAt: new Date() })
+          .where(eq(productsTable.id, item.productId));
+      }
+    }
 
     logger.info({ reference }, "Webhook: order marked paid");
   }

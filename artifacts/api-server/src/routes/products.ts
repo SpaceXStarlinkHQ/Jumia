@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, type SQL } from "drizzle-orm";
+import { eq, ilike, or, and, type SQL } from "drizzle-orm";
 import { db, productsTable } from "@workspace/db";
 import {
   ListProductsQueryParams,
@@ -28,7 +28,11 @@ router.get("/products", async (req, res): Promise<void> => {
     conditions.push(eq(productsTable.category, query.data.category));
   }
   if (query.data.search) {
-    conditions.push(ilike(productsTable.name, `%${query.data.search}%`));
+    const term = `%${query.data.search}%`;
+    conditions.push(or(
+      ilike(productsTable.name, term),
+      ilike(productsTable.description, term),
+    )!);
   }
 
   const products =

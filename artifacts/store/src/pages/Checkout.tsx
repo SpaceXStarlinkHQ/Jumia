@@ -113,10 +113,14 @@ export default function Checkout() {
             </form>
           </div>
 
-          <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden opacity-50 pointer-events-none">
-            <h2 className="text-sm font-bold text-gray-800 p-4 uppercase flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full border-2 border-gray-400 flex items-center justify-center text-xs text-gray-400">2</span> Payment Method
+          <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
+            <h2 className="text-sm font-bold text-gray-800 p-4 border-b border-gray-100 uppercase flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full border-2 border-[#F68B1E] flex items-center justify-center text-xs text-[#F68B1E]">2</span> Payment Method
             </h2>
+            <div className="p-4 flex items-center gap-3 text-sm text-gray-600">
+              <Lock className="w-4 h-4 text-[#F68B1E] shrink-0" />
+              <span>You'll be securely redirected to <strong>Paystack</strong> to complete your payment — card, bank transfer, or USSD accepted.</span>
+            </div>
           </div>
         </div>
 

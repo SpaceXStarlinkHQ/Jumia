@@ -125,7 +125,7 @@ export default function Cart() {
                 <span className="font-bold text-gray-900 text-base">Total</span>
                 <span className="font-bold text-xl text-gray-900">{formatNaira(totalKobo)}</span>
               </div>
-              <p className="text-xs text-gray-500 text-right">Delivery fees not included yet.</p>
+              <p className="text-xs text-[#3CB64A] text-right font-medium">✓ Free delivery included</p>
             </div>
 
             <button

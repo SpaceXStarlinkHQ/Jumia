@@ -20,8 +20,8 @@ const categoryIcons: Record<string, any> = {
   "Electronics": Laptop
 };
 
-// Promo ends 2 days after the store launched (July 21 2026 00:00 UTC + 48 h)
-const PROMO_END = new Date("2026-07-23T23:59:59Z").getTime();
+// Promo ends July 31 2026 23:59 UTC
+const PROMO_END = new Date("2026-07-31T23:59:59Z").getTime();
 
 function FlashSaleTimer() {
   const [parts, setParts] = useState<{ d: string; h: string; m: string; s: string } | null>(null);
@@ -124,9 +124,9 @@ export default function Catalog() {
               
               <h2 className="text-white text-5xl md:text-6xl font-black mb-2 relative z-10 drop-shadow-md">Up to 80% OFF</h2>
               <p className="text-white/90 text-lg md:text-xl font-medium mb-6 relative z-10">2-Day Flash Promo — Limited time only!</p>
-              <button className="bg-white text-[#F68B1E] px-8 py-3 rounded text-sm font-bold shadow-lg hover:bg-gray-50 transition-colors relative z-10 uppercase">
+              <Link href="/" className="bg-white text-[#F68B1E] px-8 py-3 rounded text-sm font-bold shadow-lg hover:bg-gray-50 transition-colors relative z-10 uppercase inline-block">
                 Shop Now
-              </button>
+              </Link>
             </div>
 
             {/* Right Mini Banners */}
@@ -156,7 +156,7 @@ export default function Catalog() {
                 </h3>
                 <FlashSaleTimer />
               </div>
-              <Link href="/" className="text-white text-sm font-medium hover:underline hidden sm:block">See All &gt;</Link>
+              <Link href="/?category=" className="text-white text-sm font-medium hover:underline hidden sm:block">See All &gt;</Link>
             </div>
             
             <div className="p-2 overflow-x-auto no-scrollbar">
