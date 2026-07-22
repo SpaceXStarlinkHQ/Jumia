@@ -25,15 +25,25 @@ app.use(
     },
   }),
 );
-app.use(cors());
+// Allow the Vercel frontend (and the in-Replit dev proxy) to reach the API.
+// FRONTEND_URL should be the full Vercel origin, e.g. https://my-store.vercel.app
+const FRONTEND_URL = process.env["FRONTEND_URL"];
+app.use(
+  cors({
+    origin: FRONTEND_URL
+      ? [FRONTEND_URL, /\.vercel\.app$/, /localhost/]
+      : true, // allow all in dev
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-// Redirect root to the store
+// Redirect bare root to the storefront (dev: in-Replit, prod: Vercel URL)
 app.get("/", (_req, res) => {
-  res.redirect(301, "/store/");
+  res.redirect(301, FRONTEND_URL ?? "/store/");
 });
 
 export default app;

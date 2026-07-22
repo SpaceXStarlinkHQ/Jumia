@@ -1,0 +1,9 @@
+{
+  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @workspace/store run build",
+  "outputDirectory": "artifacts/store/dist/public",
+  "installCommand": "echo 'install handled in buildCommand'",
+  "framework": null,
+  "env": {
+    "BASE_PATH": "/"
+  }
+}
