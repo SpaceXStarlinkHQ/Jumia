@@ -152,6 +152,33 @@ IN THE BOX: TV, remote control (batteries included), stand + screws, power cable
     ],
   },
   {
+    name: "Tecno Camon 40 Pro 5G",
+    description: `Capture every moment in stunning detail with the Tecno Camon 40 Pro 5G — the camera-first smartphone built for Nigerian content creators, trendsetters, and everyday users who refuse to compromise on quality.
+
+KEY FEATURES:
+• 50MP AI Triple Camera — ultra-clear photos day and night with AI scene optimisation
+• AMOLED Vivid Display — deep blacks, punchy colours, and buttery-smooth scrolling
+• 256GB Storage + 16GB RAM — store thousands of photos, videos, and apps without slowing down
+• 5G Connectivity — future-ready network speeds for streaming, gaming, and video calls
+• 45W Fast Charging — from 0 to full in under an hour; less time charging, more time shooting
+• MediaTek Dimensity Processor — powerful enough for multitasking, gaming, and heavy apps
+• IP64 Splash Resistance — protected against everyday dust and water splashes
+• Sleek design with premium glass back — available in Aqua Green, Midnight Blue, and Pearl White
+
+IN THE BOX: Camon 40 Pro 5G handset, 45W fast charger, USB-C cable, SIM ejector pin, silicone case, earbuds, smartwatch (bonus bundle), screen protector, user manual, warranty card.
+
+WARRANTY: 1 year manufacturer warranty via Tecno Nigeria authorised service centres.`,
+    priceKobo: 14_000_000,
+    category: "Phones & Tablets",
+    stock: 35,
+    imageUrl: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&q=80",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80",
+      "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=600&q=80",
+    ],
+  },
+  {
     name: "Morning Glory Orthopedic Foam Mattress — 6×4.5ft (Queen)",
     description: `Sleep better every night with the Morning Glory Orthopedic Foam Mattress. Trusted across Nigeria for superior comfort and durability, this queen-size mattress gives your back the support it needs while cushioning every pressure point for a deep, restful sleep.
 
