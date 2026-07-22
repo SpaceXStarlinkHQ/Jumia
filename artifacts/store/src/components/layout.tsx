@@ -198,8 +198,33 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
             </ul>
           </div>
         </div>
+        {/* Payment Methods */}
+        <div className="border-t border-gray-800 py-6 px-4">
+          <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">Secure Payment Methods</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {[
+                  { label: "VISA", bg: "bg-[#1A1F71]", text: "text-white", style: "italic font-black" },
+                  { label: "MASTERCARD", bg: "bg-[#252525]", text: "text-[#EB001B]", style: "font-black text-[10px]" },
+                  { label: "VERVE", bg: "bg-[#003087]", text: "text-white", style: "font-bold text-[10px]" },
+                  { label: "PAYSTACK", bg: "bg-[#00C3F7]", text: "text-white", style: "font-bold text-[10px]" },
+                  { label: "BANK TRANSFER", bg: "bg-gray-700", text: "text-white", style: "font-bold text-[9px]" },
+                ].map(({ label, bg, text, style }) => (
+                  <span key={label} className={`${bg} ${text} px-2.5 py-1.5 rounded text-[10px] ${style} tracking-tight whitespace-nowrap`}>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="text-center sm:text-right">
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2">We Deliver Nationwide</p>
+              <p className="text-xs text-gray-400">Lagos · Abuja · Port Harcourt · Kano · and more</p>
+            </div>
+          </div>
+        </div>
         <div className="bg-[#12121e] py-4 text-center text-xs text-gray-500 border-t border-gray-800">
-          <p>© {new Date().getFullYear()} Jumia. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Jumia Nigeria Limited. All rights reserved.</p>
         </div>
       </footer>
     </div>

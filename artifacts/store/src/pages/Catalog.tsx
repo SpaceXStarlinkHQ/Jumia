@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useListProducts, useListCategories } from "@workspace/api-client-react";
 import { formatNaira } from "@/lib/utils";
-import { ShoppingCart, ChevronRight, Laptop, Smartphone, Shirt, Home, ShoppingBag, Coffee, Heart, Dumbbell, Baby, Package, Star } from "lucide-react";
+import { ShoppingCart, ChevronRight, Laptop, Smartphone, Shirt, Home, ShoppingBag, Coffee, Heart, Dumbbell, Baby, Package, Star, Truck, ShieldCheck, Lock, RefreshCw, Zap } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/hooks/use-toast";
 import { getDiscount, getOriginalPrice, getRating } from "@/lib/jumia-mock";
@@ -212,6 +212,56 @@ export default function Catalog() {
             </div>
           </div>
 
+          {/* Trust Badges */}
+          <div className="bg-white rounded shadow-sm border border-gray-100">
+            <div className="max-w-screen-xl mx-auto px-4 py-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100">
+                {[
+                  { icon: ShieldCheck, label: "100% Authentic", sub: "All products are genuine" },
+                  { icon: Truck, label: "FREE Delivery", sub: "On eligible orders" },
+                  { icon: RefreshCw, label: "Easy Returns", sub: "7-day return policy" },
+                  { icon: Lock, label: "Secure Payment", sub: "Encrypted & safe" },
+                ].map(({ icon: Icon, label, sub }, i) => (
+                  <div key={label} className={`flex items-center gap-2.5 px-3 py-2 ${i >= 2 ? "mt-2 sm:mt-0 border-t sm:border-t-0 border-gray-100" : ""}`}>
+                    <Icon className="w-7 h-7 text-[#F68B1E] shrink-0" />
+                    <div>
+                      <div className="text-[12px] font-bold text-gray-800 leading-tight">{label}</div>
+                      <div className="text-[11px] text-gray-500 leading-tight">{sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Shop by Category */}
+          <div className="bg-white rounded shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-gray-800">Shop by Category</h3>
+              <Link href="/" className="text-[#F68B1E] text-xs font-medium hover:underline">See All</Link>
+            </div>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+              {[
+                { name: "Electronics", icon: Zap, bg: "bg-blue-50", color: "text-blue-600", href: "/?category=Electronics" },
+                { name: "Phones", icon: Smartphone, bg: "bg-purple-50", color: "text-purple-600", href: "/?category=Phones+%26+Tablets" },
+                { name: "Fashion", icon: Shirt, bg: "bg-pink-50", color: "text-pink-500", href: "/?category=Fashion" },
+                { name: "Home & Office", icon: Home, bg: "bg-amber-50", color: "text-amber-600", href: "/?category=Home+%26+Office" },
+                { name: "Supermarket", icon: ShoppingBag, bg: "bg-green-50", color: "text-green-600", href: "/?category=Supermarket" },
+                { name: "Computing", icon: Laptop, bg: "bg-cyan-50", color: "text-cyan-600", href: "/?category=Computing" },
+                { name: "Kitchen", icon: Coffee, bg: "bg-orange-50", color: "text-orange-500", href: "/?category=Kitchen+%26+Dining" },
+                { name: "Health", icon: Heart, bg: "bg-red-50", color: "text-red-500", href: "/?category=Health+%26+Beauty" },
+                { name: "Sports", icon: Dumbbell, bg: "bg-indigo-50", color: "text-indigo-600", href: "/?category=Sporting+Goods" },
+                { name: "Baby", icon: Baby, bg: "bg-rose-50", color: "text-rose-400", href: "/?category=Baby+Products" },
+              ].map(({ name, icon: Icon, bg, color, href }) => (
+                <Link key={name} href={href} className="flex flex-col items-center gap-1.5 group">
+                  <div className={`${bg} w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center group-hover:ring-2 ring-[#F68B1E] transition-all`}>
+                    <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color}`} />
+                  </div>
+                  <span className="text-[10px] text-gray-700 font-medium text-center leading-tight line-clamp-1">{name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </>
       )}
 
