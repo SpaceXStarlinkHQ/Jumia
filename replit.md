@@ -12,9 +12,17 @@ A full-stack Nigerian e-commerce platform cloning the Jumia.com.ng experience. B
 
 ## Running
 
-Both workflows are managed:
+Both workflows are managed by Replit:
 - **API Server**: `artifacts/api-server: API Server` — builds with esbuild then starts on PORT 8080
-- **Online Store**: `artifacts/store: Online Store` — Vite dev server on PORT 24964
+- **Online Store**: `artifacts/store: web` — Vite dev server on PORT 5173, served at `/store/`
+
+To install dependencies: `pnpm install`
+To push schema changes: `pnpm --filter @workspace/db run push`
+
+## Required Secrets
+
+- `SESSION_SECRET` — session signing key (already set)
+- `PAYSTACK_SECRET_KEY` — needed for checkout to work (add via Replit Secrets)
 
 ## Key Features
 
