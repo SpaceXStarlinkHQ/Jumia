@@ -1,2 +1,4 @@
+# Override pnpm install to include devDependencies needed for the build step.
+# NODE_ENV is reset to production by Railway's env vars at runtime.
 [phases.install]
-cmds = ["pnpm install --no-frozen-lockfile"]
+cmds = ["NODE_ENV=development pnpm install --no-frozen-lockfile"]
