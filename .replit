@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "bash"]
+modules = ["nodejs-20", "web", "bash", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -62,8 +62,3 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
-
-[userenv]
-
-[userenv.shared]
-APP_DATABASE_URL = "postgresql://neondb_owner:npg_ITWv3JfZtO7g@ep-lucky-field-aycc2e8s-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
