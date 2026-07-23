@@ -1,283 +1,304 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { useListProducts, useListCategories } from "@workspace/api-client-react";
+import { useListProducts } from "@workspace/api-client-react";
 import { formatNaira } from "@/lib/utils";
-import { ShoppingCart, ChevronRight, Laptop, Smartphone, Shirt, Home, ShoppingBag, Coffee, Heart, Dumbbell, Baby, Package, Star, Truck, ShieldCheck, Lock, RefreshCw, Zap } from "lucide-react";
+import {
+  ShoppingCart, ChevronRight, Star, Truck, Shield,
+  HeadphonesIcon, RotateCcw, Package, Flame, Tag,
+} from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/hooks/use-toast";
-import { getDiscount, getOriginalPrice, getRating } from "@/lib/jumia-mock";
-
-const categoryIcons: Record<string, any> = {
-  "Computing": Laptop,
-  "Phones & Tablets": Smartphone,
-  "Fashion": Shirt,
-  "Home & Office": Home,
-  "Supermarket": ShoppingBag,
-  "Kitchen & Dining": Coffee,
-  "Health & Beauty": Heart,
-  "Sporting Goods": Dumbbell,
-  "Baby Products": Baby,
-  "Electronics": Laptop
-};
+import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
 
 // Promo ends July 31 2026 23:59 UTC
 const PROMO_END = new Date("2026-07-31T23:59:59Z").getTime();
 
-function FlashSaleTimer() {
-  const [parts, setParts] = useState<{ d: string; h: string; m: string; s: string } | null>(null);
+const FLASH_BADGES = ["🔥 HOT", "⚡ FLASH", "🏷️ DEAL", "⭐ TOP", "🔥 HOT", "🆕 NEW"];
+
+const CATEGORIES = [
+  "Electronics", "Phones & Tablets", "Home & Office", "Fashion",
+  "Computing", "Supermarket", "Kitchen & Dining", "Health & Beauty",
+];
+
+function FlashTimer() {
+  const [parts, setParts] = useState<[string, string, string, string] | null>(null);
 
   useEffect(() => {
     function tick() {
       const diff = PROMO_END - Date.now();
-      if (diff <= 0) {
-        setParts({ d: "00", h: "00", m: "00", s: "00" });
-        return;
-      }
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      if (diff <= 0) { setParts(["00", "00", "00", "00"]); return; }
+      const h = Math.floor(diff / (1000 * 60 * 60));
       const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const s = Math.floor((diff % (1000 * 60)) / 1000);
-      setParts({
-        d: d.toString().padStart(2, '0'),
-        h: h.toString().padStart(2, '0'),
-        m: m.toString().padStart(2, '0'),
-        s: s.toString().padStart(2, '0'),
-      });
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      setParts([
+        d.toString().padStart(2, "0"),
+        (h % 24).toString().padStart(2, "0"),
+        m.toString().padStart(2, "0"),
+        s.toString().padStart(2, "0"),
+      ]);
     }
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
-  const seg = (v: string, label: string) => (
-    <div className="flex flex-col items-center">
-      <span className="bg-[#E53935] text-white px-2 py-0.5 rounded shadow-sm leading-tight font-bold tabular-nums">{v}</span>
-      <span className="text-white/70 text-[9px] mt-0.5 uppercase tracking-wider">{label}</span>
+  if (!parts) return null;
+  return (
+    <div className="flex items-center gap-1.5">
+      {parts.map((v, i, a) => (
+        <span key={i} className="flex items-center gap-1.5">
+          <span className="bg-white/20 backdrop-blur text-white text-sm font-black px-2.5 py-1 rounded-lg tabular-nums">{v}</span>
+          {i < a.length - 1 && <span className="text-white/60 font-bold">:</span>}
+        </span>
+      ))}
     </div>
   );
+}
 
+function Stars({ rating }: { rating: number }) {
   return (
-    <div className="flex items-center gap-1 font-bold text-lg">
-      <span className="text-white text-sm mr-2 hidden sm:inline font-medium tracking-wide">Ends in:</span>
-      <div className="flex items-center gap-1.5">
-        {parts ? (
-          <>
-            {seg(parts.d, "days")}
-            <span className="text-white/80 mb-2">:</span>
-            {seg(parts.h, "hrs")}
-            <span className="text-white/80 mb-2">:</span>
-            {seg(parts.m, "min")}
-            <span className="text-white/80 mb-2">:</span>
-            {seg(parts.s, "sec")}
-          </>
-        ) : (
-          <span className="bg-[#E53935] text-white px-2 py-0.5 rounded shadow-sm leading-tight">--:--:--:--</span>
-        )}
-      </div>
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(s => (
+        <Star key={s} className={`w-3 h-3 ${s <= Math.floor(rating) ? "fill-[#F5A623] text-[#F5A623]" : "text-gray-300 fill-gray-300"}`} />
+      ))}
     </div>
   );
 }
 
 export default function Catalog() {
-  const [loc] = useLocation();
-  const searchString = useSearch();          // reacts to query-string changes
+  const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);
   const search = searchParams.get("search") || "";
   const category = searchParams.get("category") || "";
 
-  const { data: products, isLoading: isLoadingProducts } = useListProducts({ 
-    search: search || undefined, 
-    category: category || undefined 
+  const { data: products, isLoading } = useListProducts({
+    search: search || undefined,
+    category: category || undefined,
   });
-  const { data: categories, isLoading: isLoadingCategories } = useListCategories();
   const { addItem } = useCart();
   const { toast } = useToast();
 
   const isHome = !search && !category;
 
+  const handleAddToCart = (e: React.MouseEvent, product: NonNullable<typeof products>[0]) => {
+    e.preventDefault();
+    addItem({
+      productId: product.id,
+      productName: product.name,
+      quantity: 1,
+      unitPriceKobo: product.priceKobo,
+      imageUrl: product.images?.[0] ?? product.imageUrl ?? undefined,
+    });
+    toast({ title: "Added to cart", description: `${product.name} added.` });
+  };
+
   return (
     <div className="space-y-4 pb-8">
       {isHome && (
         <>
-          {/* Hero Section */}
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Left Category Menu */}
-            <div className="hidden md:block w-56 shrink-0 bg-white rounded shadow-sm border border-gray-100 py-2">
-              <Link href="/" className="flex items-center justify-between px-3 py-1.5 text-xs text-gray-700 hover:text-[#F68B1E] font-medium group">
-                <span className="flex items-center gap-2"><ShoppingCart className="w-4 h-4"/> All Categories</span>
-              </Link>
-              {categories?.map((c) => (
-                <Link key={c} href={`/?category=${encodeURIComponent(c)}`} className="flex items-center justify-between px-3 py-1.5 text-xs text-gray-700 hover:text-[#F68B1E] group">
-                  <span className="flex items-center gap-2 capitalize">
-                    {categoryIcons[c] ? React.createElement(categoryIcons[c], { className: "w-4 h-4" }) : <Package className="w-4 h-4" />}
-                    {c}
-                  </span>
-                  <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-[#F68B1E]" />
+          {/* Hero */}
+          <div className="flex gap-3">
+            {/* Category sidebar */}
+            <div className="hidden lg:block w-52 shrink-0 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              {CATEGORIES.map(c => (
+                <Link
+                  key={c}
+                  href={`/?category=${encodeURIComponent(c)}`}
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-[12px] text-gray-700 hover:bg-orange-50 hover:text-[#F68B1E] border-b border-gray-50 last:border-0 transition-colors"
+                >
+                  {c}
+                  <ChevronRight className="w-3 h-3 text-gray-400" />
                 </Link>
               ))}
             </div>
 
-            {/* Center Banner */}
-            <div className="flex-1 rounded overflow-hidden relative bg-gradient-to-br from-[#F68B1E] to-[#FF8C00] h-[280px] shadow-sm flex flex-col items-center justify-center text-center px-4 group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full translate-x-1/3 -translate-y-1/3" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-black opacity-[0.03] rounded-full -translate-x-1/4 translate-y-1/4" />
-              
-              <h2 className="text-white text-5xl md:text-6xl font-black mb-2 relative z-10 drop-shadow-md">Up to 80% OFF</h2>
-              <p className="text-white/90 text-lg md:text-xl font-medium mb-6 relative z-10">2-Day Flash Promo — Limited time only!</p>
-              <Link href="/" className="bg-white text-[#F68B1E] px-8 py-3 rounded text-sm font-bold shadow-lg hover:bg-gray-50 transition-colors relative z-10 uppercase inline-block">
-                Shop Now
-              </Link>
+            {/* Main banner */}
+            <div className="flex-1 relative rounded-xl overflow-hidden min-h-[220px] bg-gradient-to-r from-[#1A1A1A] via-[#2D1810] to-[#F68B1E] flex items-center p-6 md:p-8 shadow-xl">
+              <div
+                className="absolute inset-0 opacity-40"
+                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E\")" }}
+              />
+              <div className="relative z-10 max-w-xs">
+                <span className="inline-flex items-center gap-1.5 bg-[#FFCF00] text-[#1A1A1A] text-[11px] font-black px-3 py-1 rounded-full mb-3">
+                  <Flame className="w-3 h-3" /> FLASH PROMO — ENDS JULY 31
+                </span>
+                <h1 className="text-white font-black text-4xl md:text-5xl leading-none mb-2">
+                  Up to<br /><span className="text-[#FFCF00]">80% OFF</span>
+                </h1>
+                <p className="text-white/70 text-sm mb-5">
+                  Appliances, phones, TVs &amp; more.<br />
+                  Limited stock — shop now before it's gone.
+                </p>
+                <Link
+                  href="/?category=Home+%26+Office"
+                  className="inline-block bg-[#F68B1E] text-white font-bold px-6 py-2.5 rounded-lg hover:bg-[#E07B10] transition-all shadow-xl hover:scale-105 duration-200 uppercase text-sm tracking-wide"
+                >
+                  Shop Flash Deals →
+                </Link>
+              </div>
+              <div className="absolute right-6 bottom-0 hidden md:block opacity-90">
+                <img
+                  src="https://firmanpowerequipment.com/cdn/shop/products/P03601_200_900x900.png?v=1630521314"
+                  alt=""
+                  className="h-48 object-contain drop-shadow-2xl"
+                />
+              </div>
             </div>
 
-            {/* Right Mini Banners */}
-            <div className="hidden lg:flex w-48 shrink-0 flex-col gap-4">
-              <div className="flex-1 rounded shadow-sm bg-gradient-to-br from-[#3CB64A] to-[#2E7D32] flex flex-col p-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full translate-x-1/2 -translate-y-1/2" />
-                <span className="text-white font-black text-xl leading-tight">Free<br/>Delivery</span>
-                <span className="text-white/80 text-xs mt-1">On select items</span>
-                <Package className="absolute bottom-[-10px] right-[-10px] w-20 h-20 text-white opacity-20" />
+            {/* Side banners */}
+            <div className="hidden xl:flex w-44 shrink-0 flex-col gap-3">
+              <div className="flex-1 rounded-xl bg-gradient-to-br from-[#3CB64A] to-[#1B5E20] p-4 flex flex-col justify-between shadow-md">
+                <Truck className="w-7 h-7 text-white/70" />
+                <div>
+                  <div className="text-white font-black text-lg leading-tight">Free<br />Delivery</div>
+                  <div className="text-white/70 text-[11px] mt-1">Orders above ₦50k</div>
+                </div>
               </div>
-              <div className="flex-1 rounded shadow-sm bg-gradient-to-br from-[#1565C0] to-[#0D47A1] flex flex-col p-4 relative overflow-hidden">
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -translate-x-1/2 translate-y-1/2" />
-                <span className="text-white font-black text-xl leading-tight">New<br/>Arrivals</span>
-                <span className="text-white/80 text-xs mt-1">Discover latest</span>
-                <Star className="absolute top-[-10px] right-[-10px] w-20 h-20 text-white opacity-20" />
+              <div className="flex-1 rounded-xl bg-gradient-to-br from-[#1565C0] to-[#0D47A1] p-4 flex flex-col justify-between shadow-md">
+                <Shield className="w-7 h-7 text-white/70" />
+                <div>
+                  <div className="text-white font-black text-lg leading-tight">100%<br />Secure</div>
+                  <div className="text-white/70 text-[11px] mt-1">Paystack protected</div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Flash Sales Section */}
-          <div className="bg-white rounded shadow-sm overflow-hidden mt-4 border border-gray-100">
-            <div className="bg-[#E53935] px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h3 className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
-                  <span className="bg-[#FFCF00] text-black w-6 h-6 rounded flex items-center justify-center text-sm">⚡</span>
-                  Flash Sales
-                </h3>
-                <FlashSaleTimer />
+          {/* Trust bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { icon: Shield, label: "Paystack Secured", sub: "Every transaction protected" },
+              { icon: Truck, label: "Free Delivery", sub: "On orders above ₦50,000" },
+              { icon: HeadphonesIcon, label: "24/7 Support", sub: "Chat, call & WhatsApp" },
+              { icon: RotateCcw, label: "Easy Returns", sub: "15-day hassle-free return" },
+            ].map(({ icon: Icon, label, sub }) => (
+              <div key={label} className="bg-white rounded-lg px-4 py-3 flex items-center gap-3 shadow-sm border border-gray-100 hover:border-orange-200 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4 text-[#F68B1E]" />
+                </div>
+                <div>
+                  <div className="text-[12px] font-bold text-gray-800">{label}</div>
+                  <div className="text-[10px] text-gray-500">{sub}</div>
+                </div>
               </div>
-              <Link href="/?category=" className="text-white text-sm font-medium hover:underline hidden sm:block">See All &gt;</Link>
+            ))}
+          </div>
+
+          {/* Flash Sales */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-[#E53935] to-[#C62828] px-5 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-2 text-white font-black text-xl">
+                  <span className="bg-[#FFCF00] text-black w-7 h-7 rounded flex items-center justify-center text-base">⚡</span>
+                  Flash Sales
+                </span>
+                <FlashTimer />
+              </div>
+              <Link href="/" className="text-white text-sm font-semibold hover:underline flex items-center gap-1">
+                See All <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
-            
-            <div className="p-2 overflow-x-auto no-scrollbar">
-              <div className="flex gap-2 pb-2" style={{width: 'max-content'}}>
-                {isLoadingProducts ? (
-                  [1,2,3,4,5].map(i => (
-                    <div key={i} className="w-[148px] sm:w-[180px] shrink-0 p-2 space-y-2">
-                      <div className="aspect-square bg-gray-200 animate-pulse rounded" />
-                      <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4" />
-                      <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2" />
+
+            <div className="p-4">
+              {isLoading ? (
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="rounded-xl border border-gray-100 p-2.5 space-y-2">
+                      <div className="aspect-square bg-gray-100 animate-pulse rounded-lg" />
+                      <div className="h-3 bg-gray-100 animate-pulse rounded w-3/4" />
+                      <div className="h-4 bg-gray-100 animate-pulse rounded w-1/2" />
                     </div>
-                  ))
-                ) : [...(products ?? [])]
-                    .sort((a, b) => {
-                      // Pin Deep Freezer (21) and Generator (24) to front of Flash Sales
-                      const priority: Record<number, number> = { 21: 0, 24: 1 };
-                      const pa = priority[a.id] ?? 99;
-                      const pb = priority[b.id] ?? 99;
-                      return pa - pb;
-                    })
-                    .slice(0, 6)
-                    .map(product => {
-                  const origPrice = getOriginalPrice(product.priceKobo, product.id);
-                  const discount = getDiscount(product.id);
-                  const rating = getRating(product.id);
-                  
-                  return (
-                    <Link key={product.id} href={`/products/${product.id}`} className="w-[148px] sm:w-[180px] shrink-0 p-2 hover:shadow-md transition-shadow rounded group relative bg-white flex flex-col border border-transparent hover:border-gray-100">
-                      <div className="absolute top-2 right-2 bg-[#E53935] text-white text-xs font-bold px-1.5 py-0.5 rounded z-10">
-                        -{discount}%
-                      </div>
-                      <div className="aspect-square relative mb-2">
-                        {(product.images?.[0] || product.imageUrl) ? (
-                          <img src={product.images?.[0] || product.imageUrl!} alt={product.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 rounded">
-                            <Package className="w-10 h-10 opacity-50" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  {(products ?? []).slice(0, 6).map((product, idx) => {
+                    const origPrice = getOriginalPrice(product.priceKobo, product.id);
+                    const discount = getDiscount(product.id);
+                    const rating = getRating(product.id);
+                    const reviews = getReviewCount(product.id);
+                    const img = product.images?.[0] ?? product.imageUrl;
+                    const badge = FLASH_BADGES[idx] ?? "🔥 HOT";
+
+                    return (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.id}`}
+                        className="group relative rounded-xl border border-gray-100 hover:border-orange-300 hover:shadow-lg transition-all duration-200 bg-white p-2.5 flex flex-col"
+                      >
+                        <div className="absolute top-2 left-2 z-10 bg-[#E53935] text-white text-[10px] font-black px-1.5 py-0.5 rounded-md">
+                          -{discount}%
+                        </div>
+                        <div className="absolute top-2 right-2 z-10 text-[10px] bg-gray-900/80 text-white px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                          {badge}
+                        </div>
+                        <div className="aspect-square mb-2 rounded-lg overflow-hidden bg-gray-50">
+                          {img ? (
+                            <img src={img} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <Package className="w-8 h-8 opacity-50" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-700 line-clamp-2 leading-snug mb-1.5 group-hover:text-[#F68B1E] transition-colors">
+                          {product.name}
+                        </p>
+                        <div className="flex items-center gap-1 mb-1">
+                          <Stars rating={rating} />
+                          <span className="text-[10px] text-gray-400">({reviews})</span>
+                        </div>
+                        <div className="font-black text-[#F68B1E] text-[14px] leading-none">
+                          {formatNaira(product.priceKobo)}
+                        </div>
+                        <div className="text-[10px] text-gray-400 line-through">
+                          {formatNaira(origPrice)}
+                        </div>
+                        {product.stock <= 5 && product.stock > 0 && (
+                          <div className="mt-1.5">
+                            <div className="flex justify-between text-[9px] text-gray-500 mb-0.5">
+                              <span>Selling fast</span>
+                              <span className="text-[#E53935] font-bold">Only {product.stock} left!</span>
+                            </div>
+                            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-[#E53935] rounded-full" style={{ width: `${100 - (product.stock / 20 * 100)}%` }} />
+                            </div>
                           </div>
                         )}
-                      </div>
-                      <div className="flex flex-col flex-1">
-                        <h4 className="text-[13px] text-gray-800 line-clamp-2 leading-snug group-hover:text-[#F68B1E] mb-1">{product.name}</h4>
-                        <div className="mt-auto">
-                          <div className="font-bold text-[#F68B1E] text-[15px]">{formatNaira(product.priceKobo)}</div>
-                          <div className="text-[11px] text-gray-400 line-through decoration-gray-400">{formatNaira(origPrice)}</div>
-                          <div className="flex items-center text-[#3CB64A] text-[11px] font-medium mt-1">FREE Delivery</div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Trust Badges */}
-          <div className="bg-white rounded shadow-sm border border-gray-100">
-            <div className="max-w-screen-xl mx-auto px-4 py-3">
-              <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100">
-                {[
-                  { icon: ShieldCheck, label: "100% Authentic", sub: "All products are genuine" },
-                  { icon: Truck, label: "FREE Delivery", sub: "On eligible orders" },
-                  { icon: RefreshCw, label: "Easy Returns", sub: "7-day return policy" },
-                  { icon: Lock, label: "Secure Payment", sub: "Encrypted & safe" },
-                ].map(({ icon: Icon, label, sub }, i) => (
-                  <div key={label} className={`flex items-center gap-2.5 px-3 py-2 ${i >= 2 ? "mt-2 sm:mt-0 border-t sm:border-t-0 border-gray-100" : ""}`}>
-                    <Icon className="w-7 h-7 text-[#F68B1E] shrink-0" />
-                    <div>
-                      <div className="text-[12px] font-bold text-gray-800 leading-tight">{label}</div>
-                      <div className="text-[11px] text-gray-500 leading-tight">{sub}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Shop by Category */}
-          <div className="bg-white rounded shadow-sm border border-gray-100 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-bold text-gray-800">Shop by Category</h3>
-              <Link href="/" className="text-[#F68B1E] text-xs font-medium hover:underline">See All</Link>
-            </div>
-            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-              {[
-                { name: "Electronics", icon: Zap, bg: "bg-blue-50", color: "text-blue-600", href: "/?category=Electronics" },
-                { name: "Phones", icon: Smartphone, bg: "bg-purple-50", color: "text-purple-600", href: "/?category=Phones+%26+Tablets" },
-                { name: "Fashion", icon: Shirt, bg: "bg-pink-50", color: "text-pink-500", href: "/?category=Fashion" },
-                { name: "Home & Office", icon: Home, bg: "bg-amber-50", color: "text-amber-600", href: "/?category=Home+%26+Office" },
-                { name: "Supermarket", icon: ShoppingBag, bg: "bg-green-50", color: "text-green-600", href: "/?category=Supermarket" },
-                { name: "Computing", icon: Laptop, bg: "bg-cyan-50", color: "text-cyan-600", href: "/?category=Computing" },
-                { name: "Kitchen", icon: Coffee, bg: "bg-orange-50", color: "text-orange-500", href: "/?category=Kitchen+%26+Dining" },
-                { name: "Health", icon: Heart, bg: "bg-red-50", color: "text-red-500", href: "/?category=Health+%26+Beauty" },
-                { name: "Sports", icon: Dumbbell, bg: "bg-indigo-50", color: "text-indigo-600", href: "/?category=Sporting+Goods" },
-                { name: "Baby", icon: Baby, bg: "bg-rose-50", color: "text-rose-400", href: "/?category=Baby+Products" },
-              ].map(({ name, icon: Icon, bg, color, href }) => (
-                <Link key={name} href={href} className="flex flex-col items-center gap-1.5 group">
-                  <div className={`${bg} w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center group-hover:ring-2 ring-[#F68B1E] transition-all`}>
-                    <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color}`} />
-                  </div>
-                  <span className="text-[10px] text-gray-700 font-medium text-center leading-tight line-clamp-1">{name}</span>
-                </Link>
-              ))}
+                        <div className="text-[#3CB64A] text-[10px] font-semibold mt-1">✓ Free Delivery</div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </>
       )}
 
-      {/* Main Product Grid */}
-      <div className="bg-white rounded shadow-sm p-4 mt-4 border border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3 mb-4">
-          {search ? `Search results for "${search}"` : category ? `${category}` : "Top Deals"}
-        </h3>
-        
-        {isLoadingProducts ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-              <div key={i} className="p-3 border border-transparent rounded bg-white space-y-3">
-                <div className="aspect-square bg-gray-100 animate-pulse rounded" />
-                <div className="h-4 bg-gray-200 animate-pulse rounded w-full" />
-                <div className="h-5 bg-gray-200 animate-pulse rounded w-1/2" />
+      {/* Product grid — Top Deals / Search / Category results */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+          <h2 className="text-lg font-black text-gray-800 flex items-center gap-2">
+            <Tag className="w-5 h-5 text-[#F68B1E]" />
+            {search ? `Results for "${search}"` : category ? category : "Top Deals"}
+          </h2>
+          {isHome && (
+            <Link href="/" className="text-[#F68B1E] text-sm font-semibold flex items-center gap-1">
+              View All <ChevronRight className="w-4 h-4" />
+            </Link>
+          )}
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="rounded-xl border border-gray-100 p-3 space-y-2">
+                <div className="aspect-square bg-gray-100 animate-pulse rounded-lg" />
+                <div className="h-3 bg-gray-100 animate-pulse rounded w-full" />
+                <div className="h-4 bg-gray-100 animate-pulse rounded w-1/2" />
               </div>
             ))}
           </div>
@@ -291,96 +312,59 @@ export default function Catalog() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {products?.map((product) => {
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {products?.map(product => {
               const origPrice = getOriginalPrice(product.priceKobo, product.id);
               const discount = getDiscount(product.id);
               const rating = getRating(product.id);
+              const img = product.images?.[0] ?? product.imageUrl;
 
               return (
-                <div key={product.id} className="group relative flex flex-col p-3 border border-transparent hover:border-gray-200 hover:shadow-lg rounded transition-all duration-300 bg-white cursor-pointer h-full">
-                  <div className="absolute top-3 right-3 bg-red-100 text-[#E53935] text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
+                <div
+                  key={product.id}
+                  className="group relative rounded-xl border border-gray-100 hover:border-orange-300 hover:shadow-xl transition-all duration-300 bg-white p-3 flex flex-col"
+                >
+                  <div className="absolute top-3 right-3 bg-[#FFF3E0] text-[#F68B1E] text-[10px] font-black px-1.5 py-0.5 rounded-md z-10">
                     -{discount}%
                   </div>
-                  <Link href={`/products/${product.id}`} className="block flex-1 flex flex-col">
-                    <div className="aspect-square relative mb-3">
-                      {(product.images?.[0] || product.imageUrl) ? (
-                        <img 
-                          src={product.images?.[0] || product.imageUrl!} 
-                          alt={product.name} 
-                          className="object-cover w-full h-full mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
-                        />
+                  <Link href={`/products/${product.id}`} className="flex flex-col flex-1">
+                    <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-gray-50">
+                      {img ? (
+                        <img src={img} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50 rounded">
-                          <Package className="w-10 h-10 opacity-50" />
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <Package className="w-8 h-8 opacity-50" />
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col flex-1">
-                      <div className="text-[13px] text-gray-800 line-clamp-2 leading-tight mb-2 group-hover:text-[#F68B1E] transition-colors">
-                        {product.name}
+                    <p className="text-[12px] text-gray-700 line-clamp-2 leading-snug mb-2 flex-1 group-hover:text-[#F68B1E] transition-colors">
+                      {product.name}
+                    </p>
+                    <Stars rating={rating} />
+                    <div className="mt-2">
+                      <div className="font-black text-[#F68B1E] text-base leading-none">
+                        {formatNaira(product.priceKobo)}
                       </div>
-                      <div className="flex items-center gap-1 mb-2">
-                        <div className="flex text-[#F5A623]">
-                          {[1,2,3,4,5].map(star => (
-                            <Star key={star} className={`w-3 h-3 ${star <= Math.floor(rating) ? 'fill-current' : 'text-gray-300'}`} />
-                          ))}
-                        </div>
-                        <span className="text-[11px] text-gray-400">({rating})</span>
+                      <div className="text-[11px] text-gray-400 line-through mb-1">
+                        {formatNaira(origPrice)}
                       </div>
-                      <div className="mt-auto">
-                        <div className="text-[15px] font-bold text-[#F68B1E] leading-none mb-1">
-                          {formatNaira(product.priceKobo)}
-                        </div>
-                        <div className="text-xs text-gray-400 line-through decoration-gray-400 mb-2">
-                          {formatNaira(origPrice)}
-                        </div>
-                        <div className="flex items-center text-[#3CB64A] text-[10px] font-medium uppercase tracking-wide">
-                          FREE Delivery
-                        </div>
-                      </div>
+                      <div className="text-[#3CB64A] text-[10px] font-semibold">✓ Free Delivery</div>
                     </div>
                   </Link>
                   <button
+                    onClick={(e) => handleAddToCart(e, product)}
                     disabled={product.stock === 0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      addItem({
-                        productId: product.id,
-                        productName: product.name,
-                        quantity: 1,
-                        unitPriceKobo: product.priceKobo,
-                        imageUrl: product.imageUrl,
-                      });
-                      toast({
-                        title: "Item added to cart",
-                        description: `${product.name} added.`,
-                      });
-                    }}
-                    className="mt-3 w-full py-2 bg-[#F68B1E] text-white rounded font-medium text-xs sm:text-sm transition-colors hover:bg-[#E07B10] disabled:opacity-50 disabled:cursor-not-allowed opacity-0 group-hover:opacity-100 shadow-md translate-y-2 group-hover:translate-y-0 hidden sm:block duration-200 uppercase"
+                    className="mt-3 w-full bg-[#F68B1E] text-white rounded-lg py-2 text-[11px] font-bold opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 uppercase tracking-wide shadow-md disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block"
                   >
-                    ADD TO CART
+                    {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                   </button>
-                  {/* Mobile always visible add button */}
+                  {/* Mobile: always visible */}
                   <button
+                    onClick={(e) => handleAddToCart(e, product)}
                     disabled={product.stock === 0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      addItem({
-                        productId: product.id,
-                        productName: product.name,
-                        quantity: 1,
-                        unitPriceKobo: product.priceKobo,
-                        imageUrl: product.imageUrl,
-                      });
-                      toast({
-                        title: "Item added to cart",
-                        description: `${product.name} added.`,
-                      });
-                    }}
-                    className="mt-3 w-full py-2 bg-[#F68B1E] text-white rounded font-medium text-xs transition-colors hover:bg-[#E07B10] disabled:opacity-50 disabled:cursor-not-allowed sm:hidden shadow-sm uppercase"
+                    className="mt-2 w-full bg-[#F68B1E] text-white rounded-lg py-1.5 text-[11px] font-bold uppercase shadow-sm disabled:opacity-50 sm:hidden"
                   >
-                    ADD TO CART
+                    {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                   </button>
                 </div>
               );
