@@ -111,11 +111,11 @@ IN THE BOX: Generator, user manual, toolkit (spanners, screwdriver), funnel, war
     priceKobo: 7_000_000,
     category: "Home & Office",
     stock: 12,
-    imageUrl: "https://firmanpowerequipment.com/cdn/shop/products/P03601_200_900x900.png?v=1630521314",
+    imageUrl: "https://perfectmalls.com.ng/wp-content/uploads/2025/01/spg-3000e2.webp",
     images: [
-      "https://firmanpowerequipment.com/cdn/shop/products/P03601_200_900x900.png?v=1630521314",
-      "https://firmanpowerequipment.com/cdn/shop/products/P03502_200_900x900.png?v=1630521310",
-      "https://firmanpowerequipment.com/cdn/shop/products/P03504_200_900x900.png?v=1675486424",
+      "https://perfectmalls.com.ng/wp-content/uploads/2025/01/spg-3000e2.webp",
+      "https://assets.easycallsales.com.ng/products/sumec-firman-spg-3001724848315.webp",
+      "https://assets.easycallsales.com.ng/products/sumec-firman-generat1724848064.webp",
     ],
   },
   {
