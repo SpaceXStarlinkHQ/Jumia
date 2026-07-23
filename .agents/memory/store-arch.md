@@ -11,6 +11,11 @@ description: Online store monorepo — key design decisions, env vars, and route
 - DB: Replit PostgreSQL via Drizzle ORM
 - API codegen: Orval from `lib/api-spec/openapi.yaml` → `lib/api-client-react/` + `lib/api-zod/`
 
+## Database
+- Uses **Neon PostgreSQL** (external), not Replit's built-in DB
+- Connection string stored in `APP_DATABASE_URL` env var (shared) — takes priority over Replit's runtime-managed `DATABASE_URL` (which cannot be overridden)
+- `lib/db/src/index.ts` and `lib/db/drizzle.config.ts` both check `APP_DATABASE_URL ?? DATABASE_URL`
+
 ## Required secrets
 - `PAYSTACK_SECRET_KEY` — used in `artifacts/api-server/src/routes/checkout.ts` as `process.env.PAYSTACK_SECRET_KEY`
   - NOTE: the env var in the code was changed from `PAYSTACK_API_KEY` to `PAYSTACK_SECRET_KEY` to match the secret name

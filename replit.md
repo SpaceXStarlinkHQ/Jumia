@@ -22,6 +22,7 @@ To push schema changes: `pnpm --filter @workspace/db run push`
 ## Required Secrets
 
 - `SESSION_SECRET` — session signing key (already set)
+- `APP_DATABASE_URL` — Neon PostgreSQL connection string (set; takes priority over Replit's built-in DATABASE_URL)
 - `PAYSTACK_SECRET_KEY` — needed for checkout to work (add via Replit Secrets)
 
 ## Key Features
