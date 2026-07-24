@@ -10,10 +10,11 @@ export function proxyImage(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
   // Already a relative / data URL — serve as-is
   if (url.startsWith("/") || url.startsWith("data:")) return url;
-  // In production, VITE_API_BASE_URL is set to the Railway API origin.
-  // Use it to build an absolute proxy URL; fall back to relative /api in dev.
-  const apiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)
+  // In production, VITE_API_BASE_URL is the API server origin (no path).
+  // Routes are mounted at /api on that server, so the full endpoint is
+  // <origin>/api/image-proxy. In dev, the Replit proxy exposes /api directly.
+  const origin = (import.meta.env.VITE_API_BASE_URL as string | undefined)
     ? (import.meta.env.VITE_API_BASE_URL as string).replace(/\/$/, "")
-    : "/api";
-  return `${apiBase}/image-proxy?url=${encodeURIComponent(url)}`;
+    : "";
+  return `${origin}/api/image-proxy?url=${encodeURIComponent(url)}`;
 }
