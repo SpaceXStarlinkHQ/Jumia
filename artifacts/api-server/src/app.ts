@@ -25,14 +25,20 @@ app.use(
     },
   }),
 );
-// Allow the Vercel frontend (and the in-Replit dev proxy) to reach the API.
-// FRONTEND_URL should be the full Vercel origin, e.g. https://my-store.vercel.app
+// Allow the Vercel frontend and custom domain to reach the API.
+// FRONTEND_URL: comma-separated list of allowed origins, e.g.
+//   https://bigdealsnigeria.shop,https://www.bigdealsnigeria.shop
 const FRONTEND_URL = process.env["FRONTEND_URL"];
+const allowedOrigins: (string | RegExp)[] = [/\.vercel\.app$/, /localhost/];
+if (FRONTEND_URL) {
+  FRONTEND_URL.split(",")
+    .map((u) => u.trim())
+    .filter(Boolean)
+    .forEach((u) => allowedOrigins.push(u));
+}
 app.use(
   cors({
-    origin: FRONTEND_URL
-      ? [FRONTEND_URL, /\.vercel\.app$/, /localhost/]
-      : true, // allow all in dev
+    origin: FRONTEND_URL ? allowedOrigins : true, // allow all in dev
     credentials: true,
   }),
 );
