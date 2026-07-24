@@ -102,11 +102,11 @@ IN THE BOX: Generator, user manual, tool kit, funnel, warranty card (12 months).
     priceKobo: 7_000_000,
     category: "Home & Office",
     stock: 12,
-    imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80",
+    imageUrl: "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",
     images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80",
+      "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",
+      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg",
+      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Included_900x900.jpg",
     ],
   },
   {
@@ -695,11 +695,11 @@ HOW TO USE: Follow included step-by-step instruction card. Patch test 48hrs befo
     priceKobo: 380_000,
     category: "Health & Beauty",
     stock: 100,
-    imageUrl: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
     images: [
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&q=80",
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&q=80",
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&q=80",
+      "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
+      "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&q=80",
+      "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
     ],
   },
   {

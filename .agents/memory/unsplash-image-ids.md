@@ -14,7 +14,7 @@ Tested via the image proxy at `GET /api/image-proxy?url=<encoded>` — must retu
 
 ### Appliances / Home
 - `1626806819282-2c1dc01a5e0c` — washing machine
-- `1558618666-fcd25c85cd64` — electrical/power equipment
+- ~~`1558618666-fcd25c85cd64`~~ — DO NOT USE for generators: shows a mechanic/person, not a generator
 - `1555041469-a586c61ea9bc` — mattress/bed
 - `1631049307264-da0ec9d70304` — mattress
 - `1505693416388-ac5ce068fe85` — bedroom
@@ -97,6 +97,11 @@ These IDs returned 404 from Unsplash:
 `1543353071-087b4f1e2bc2`, `1522337659624-216be656407b`, `1590556360974-ce10e00e7bbd`,
 `1561087867-b62e82c5d6e4`, `1562016600-ece076df3a6e`
 
+## Generator images (Firman CDN — confirmed 200 through proxy)
+- `https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png` — front view
+- `https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg` — angle view
+- `https://firmanpowerequipment.com/cdn/shop/files/W03082_Included_900x900.jpg` — in-box view
+
 ## Image Proxy Allowlist (working external hosts)
 - `images.unsplash.com` ✅
 - `www.danby.com` ✅
@@ -105,6 +110,7 @@ These IDs returned 404 from Unsplash:
 - `static.nike.com` ✅
 - `store.storeimages.cdn-apple.com` ✅
 - `resource.logitech.com` ✅
-- `firmanpowerequipment.com` ✅ (hero banner only — product page images may differ)
+- `firmanpowerequipment.com` ✅ (CDN shop URLs work: /cdn/shop/products/ and /cdn/shop/files/)
+- `clorebeauty.com` ❌ not in allowlist (403)
 
 **Why:** Amazon, Samsung, Jumia, LG, Hisense, Etsy, Ralph Lauren all block proxy/hotlink requests or have dead URLs. Only use hosts from the confirmed working list above when adding new product images.
