@@ -336,33 +336,35 @@ IN THE BOX: Laptop, 65W USB-C charger, documentation.`,
     imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
     images: [
       "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
+      "https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?w=500&q=80",
+      "https://images.unsplash.com/photo-1555255707-c07966088b7b?w=500&q=80",
     ],
   },
   {
     name: "Lenovo IdeaPad Slim 3 — Intel Core i5 / 16GB / 512GB SSD",
-    description: `The Lenovo IdeaPad Slim 3 is a powerhouse thin-and-light laptop perfect for everyday computing, video calls, and light creative work.
+    description: `The Lenovo IdeaPad Slim 3 is a powerhouse thin-and-light laptop perfect for everyday computing, video calls, and light creative work. Thin, lightweight, and built for long days — whether you're in the office, at uni, or working from home.
 
 KEY FEATURES:
-• 15.6-inch FHD IPS display — 300 nits, TÜV Rheinland eye-care certified
-• Intel Core i5-1235U — 10-core hybrid architecture
-• 16GB LPDDR5 RAM — effortless multitasking
-• 512GB M.2 NVMe SSD — fast, silent, reliable
-• Intel Iris Xe Graphics — great for presentations and light photo editing
-• Wi-Fi 6, Bluetooth 5.1, USB-C with PD, HDMI 1.4
-• Windows 11 Home, Microsoft Office pre-loaded
-• Up to 9 hours battery life
+• 15.6-inch FHD IPS display — 300 nits, TÜV Rheinland eye-care certified, anti-glare
+• Intel Core i5-1235U — 10-core hybrid architecture (2P + 8E cores)
+• 16GB LPDDR5 RAM — effortless multitasking, no lag
+• 512GB M.2 NVMe SSD — fast, silent, reliable; boots in under 10 seconds
+• Intel Iris Xe Graphics — smooth video playback and light photo/video editing
+• Wi-Fi 6 (802.11ax), Bluetooth 5.1 for fast, stable wireless
+• USB-C with Power Delivery, USB-A ×2, HDMI 1.4, SD card slot
+• Windows 11 Home + Microsoft Office Home & Student pre-loaded
+• Up to 9 hours battery life — all-day use on a single charge
+• 1.62 kg — light enough for your bag every day
 
-IN THE BOX: Laptop, 65W slim-tip charger.`,
+IN THE BOX: Laptop, 65W slim-tip charger, quick-start guide.`,
     priceKobo: 45_000_000,
     category: "Computing",
     stock: 10,
     imageUrl: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&q=80",
     images: [
       "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&q=80",
-      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&q=80",
-      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&q=80",
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80",
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
     ],
   },
   {
