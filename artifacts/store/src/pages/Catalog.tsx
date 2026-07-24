@@ -237,7 +237,7 @@ export default function Catalog() {
                         </div>
                         <div className="aspect-square mb-2 rounded-lg overflow-hidden bg-gray-50">
                           {img ? (
-                            <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
+                            <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300">
                               <Package className="w-8 h-8 opacity-50" />
@@ -331,7 +331,7 @@ export default function Catalog() {
                   <Link href={`/products/${product.id}`} className="flex flex-col flex-1">
                     <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-gray-50">
                       {img ? (
-                        <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                        <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-300">
                           <Package className="w-8 h-8 opacity-50" />
