@@ -6,3 +6,9 @@ id = "mm5lc-P1hsiaEbx9dAR2_"
 uri = "file://attached_assets/facebook-ad.jpg"
 type = "image"
 title = "Facebook Marketplace Ad — Big Deals Nigeria"
+
+[[outputs]]
+id = "4GuMoRBkkylWWuRpImQvm"
+uri = "file://attached_assets/facebook-ad-prices.jpg"
+type = "image"
+title = "Facebook Ad with Prices — Big Deals Nigeria"
