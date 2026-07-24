@@ -4,6 +4,7 @@
  *
  * Prices are stored in kobo (₦1 = 100 kobo).
  */
+import { sql } from "drizzle-orm";
 import { db, productsTable } from "./index.js";
 
 const products = [
@@ -214,9 +215,24 @@ IN THE BOX: Mattress (vacuum-rolled for easy transport), care instruction card, 
 export async function seedProducts(): Promise<number> {
   console.log("🌱  Seeding products…");
 
-  await db.delete(productsTable);
-
-  const inserted = await db.insert(productsTable).values(products).returning();
+  // Upsert by name — safe to re-run even when orders reference existing products.
+  // Existing rows are updated in place; their IDs (and any FK references) stay intact.
+  const inserted = await db
+    .insert(productsTable)
+    .values(products)
+    .onConflictDoUpdate({
+      target: productsTable.name,
+      set: {
+        description: sql`excluded.description`,
+        priceKobo: sql`excluded.price_kobo`,
+        imageUrl: sql`excluded.image_url`,
+        images: sql`excluded.images`,
+        stock: sql`excluded.stock`,
+        category: sql`excluded.category`,
+        updatedAt: sql`now()`,
+      },
+    })
+    .returning();
 
   console.log(`✅  Inserted ${inserted.length} products:`);
   for (const p of inserted) {
