@@ -23,8 +23,25 @@ description: Online store monorepo — key design decisions, env vars, and route
 ## Products schema
 - `images TEXT[]` column stores up to 3 product image URLs for the detail page gallery
 - `image_url TEXT` kept for backward compat (= images[0])
+- `name TEXT UNIQUE` — unique constraint added (2026-07-24) to support safe upsert seeding
 - Frontend uses `product.images?.[0] || product.imageUrl` in Catalog cards
 - ProductDetail.tsx has full gallery: main image + thumbnail row, `selectedImageIdx` state
+
+## Seed script (lib/db/src/seed.ts)
+- Uses INSERT … ON CONFLICT (name) DO UPDATE — safe to re-run even with existing orders
+- Never deletes products; updates in-place by name so FK references (order_items) stay intact
+- Unique constraint must exist on `products.name` in the target DB before seed runs
+  - Applied to Neon DB via raw SQL (drizzle-kit push needs TTY, not usable in CI/shell)
+
+## CORS (artifacts/api-server/src/app.ts)
+- `bigdealsnigeria.shop` and `www.bigdealsnigeria.shop` are hardcoded in allowedOrigins
+- Additional origins can be added via FRONTEND_URL env var (comma-separated)
+- Always uses the allowedOrigins array (not `origin: true`); add new domains to the array
+
+## Production deployment
+- API: Railway — `workspaceapi-server-production-974e.up.railway.app` (auto-deploys from GitHub main)
+- Frontend: Vercel — `bigdealsnigeria.shop` (auto-deploys from GitHub main)
+- VITE_API_BASE_URL on Vercel = Railway API URL (already set)
 
 ## Codegen workflow (critical path)
 After any OpenAPI spec change:
