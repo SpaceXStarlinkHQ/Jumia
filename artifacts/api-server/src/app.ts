@@ -29,16 +29,23 @@ app.use(
 // FRONTEND_URL: comma-separated list of allowed origins, e.g.
 //   https://bigdealsnigeria.shop,https://www.bigdealsnigeria.shop
 const FRONTEND_URL = process.env["FRONTEND_URL"];
-const allowedOrigins: (string | RegExp)[] = [/\.vercel\.app$/, /localhost/];
+const allowedOrigins: (string | RegExp)[] = [
+  /\.vercel\.app$/,
+  /localhost/,
+  "https://bigdealsnigeria.shop",
+  "https://www.bigdealsnigeria.shop",
+];
 if (FRONTEND_URL) {
   FRONTEND_URL.split(",")
     .map((u) => u.trim())
     .filter(Boolean)
-    .forEach((u) => allowedOrigins.push(u));
+    .forEach((u) => {
+      if (!allowedOrigins.includes(u)) allowedOrigins.push(u);
+    });
 }
 app.use(
   cors({
-    origin: FRONTEND_URL ? allowedOrigins : true, // allow all in dev
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
