@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "mm5lc-P1hsiaEbx9dAR2_"
+uri = "file://attached_assets/facebook-ad.jpg"
+type = "image"
+title = "Facebook Marketplace Ad — Big Deals Nigeria"
