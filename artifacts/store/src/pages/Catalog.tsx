@@ -9,6 +9,7 @@ import {
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/hooks/use-toast";
 import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
+import { proxyImage } from "@/lib/imageProxy";
 
 // Promo ends July 31 2026 23:59 UTC
 const PROMO_END = new Date("2026-07-31T23:59:59Z").getTime();
@@ -236,7 +237,7 @@ export default function Catalog() {
                         </div>
                         <div className="aspect-square mb-2 rounded-lg overflow-hidden bg-gray-50">
                           {img ? (
-                            <img src={img} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
+                            <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300">
                               <Package className="w-8 h-8 opacity-50" />
@@ -330,7 +331,7 @@ export default function Catalog() {
                   <Link href={`/products/${product.id}`} className="flex flex-col flex-1">
                     <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-gray-50">
                       {img ? (
-                        <img src={img} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
+                        <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-300">
                           <Package className="w-8 h-8 opacity-50" />

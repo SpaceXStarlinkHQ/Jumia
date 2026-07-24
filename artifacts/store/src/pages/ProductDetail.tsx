@@ -6,6 +6,7 @@ import { formatNaira } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, ShoppingCart, Package, Plus, Minus, Star, Truck, ShieldCheck, ZoomIn } from "lucide-react";
 import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
+import { proxyImage } from "@/lib/imageProxy";
 import React from "react";
 
 export default function ProductDetail() {
@@ -121,7 +122,7 @@ export default function ProductDetail() {
               <>
                 <img
                   key={mainImage}
-                  src={mainImage}
+                  src={proxyImage(mainImage) ?? ""}
                   alt={`${product.name} — view ${selectedImageIdx + 1}`}
                   className="w-full max-w-[380px] aspect-square object-contain mix-blend-multiply transition-all duration-300"
                 />
@@ -156,7 +157,7 @@ export default function ProductDetail() {
                   aria-label={`View image ${idx + 1}`}
                 >
                   <img
-                    src={img}
+                    src={proxyImage(img)}
                     alt={`Thumbnail ${idx + 1}`}
                     className="w-full h-full object-contain mix-blend-multiply p-1"
                   />
@@ -281,7 +282,7 @@ export default function ProductDetail() {
                     </div>
                     <div className="aspect-square relative mb-2">
                       {rpImg ? (
-                        <img src={rpImg} alt={rp.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
+                        <img src={proxyImage(rpImg)} alt={rp.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
                       ) : (
                         <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 rounded">
                           <Package className="w-8 h-8 opacity-50" />

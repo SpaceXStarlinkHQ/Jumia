@@ -1,53 +1,68 @@
-# Jumia Store Clone
+# BigDeals Nigeria — Jumia Store Clone
 
-A full-stack Nigerian e-commerce platform cloning the Jumia.com.ng experience. Built as a TypeScript pnpm monorepo.
+Full-stack Nigerian e-commerce platform built as a TypeScript pnpm monorepo.
 
-## Architecture
+## Stack
 
-- **Frontend**: `artifacts/store/` — React + Vite + Tailwind CSS v4 + ShadcnUI + Wouter routing, served at `/store/`
-- **API Server**: `artifacts/api-server/` — Express.js v5 (ESM), served at `/api`
-- **Database**: Replit PostgreSQL via Drizzle ORM (`lib/db/`)
-- **API Contract**: OpenAPI 3.1 spec in `lib/api-spec/openapi.yaml`, codegen via Orval into `lib/api-client-react/` and `lib/api-zod/`
-- **Payments**: Paystack integration (secret key in `PAYSTACK_SECRET_KEY`)
+| Layer | Tech |
+|---|---|
+| Frontend | React + Vite + Tailwind CSS v4 + ShadcnUI + Wouter |
+| Backend | Express.js v5 (ESM) |
+| Database | PostgreSQL via Neon, Drizzle ORM |
+| API contracts | OpenAPI 3.1 + Orval codegen |
+| Payments | Paystack |
 
-## Running
+## Project structure
 
-Both workflows are managed by Replit:
-- **API Server**: `artifacts/api-server: API Server` — builds with esbuild then starts on PORT 8080
-- **Online Store**: `artifacts/store: web` — Vite dev server on PORT 5173, served at `/store/`
+```
+artifacts/
+  store/          React storefront  (port 5173, path /store/)
+  api-server/     Express API       (port 8080, path /api)
+lib/
+  db/             Drizzle schema, migrations, seed, fix-images scripts
+  api-spec/       OpenAPI YAML + Orval codegen config
+  api-zod/        Generated Zod validators
+  api-client-react/ Generated React Query hooks
+scripts/          Maintenance utilities
+```
 
-To install dependencies: `pnpm install`
-To push schema changes: `pnpm --filter @workspace/db run push`
+## Running locally
 
-## Required Secrets
+```bash
+pnpm install                              # install all workspace deps
+pnpm --filter @workspace/db run push      # sync DB schema
+pnpm --filter @workspace/db run seed      # seed product data
+# start both services (already configured as Replit workflows)
+```
 
-- `SESSION_SECRET` — session signing key (already set)
-- `APP_DATABASE_URL` — Neon PostgreSQL connection string (set; takes priority over Replit's built-in DATABASE_URL)
-- `PAYSTACK_SECRET_KEY` — needed for checkout to work (add via Replit Secrets)
+## Required secrets
 
-## Key Features
+| Secret | Purpose |
+|---|---|
+| `APP_DATABASE_URL` | Neon PostgreSQL connection string |
+| `SESSION_SECRET` | Express session signing key |
+| `PAYSTACK_SECRET_KEY` | Payment processing |
+| `VERCEL_TOKEN` | Deployment (optional) |
+| `RAILWAY_TOKEN` | Deployment alternative (optional) |
 
-- Jumia-style storefront with hero banner, flash sale countdown, category browsing
-- Product cards with discount badges, star ratings, "FREE Delivery" labels
-- Product detail page with **3-image gallery** (clickable thumbnails, 1/N counter)
-- Shopping cart, checkout flow with Paystack, order confirmation, order tracking
-- 20 seeded products across 6 categories with detailed descriptions and 3 real images each
+## Image proxy
 
-## After any API/schema change
+Product images are fetched server-side via `/api/image-proxy?url=<encoded>` to bypass hotlink protection on external CDNs. The frontend helper is at `artifacts/store/src/lib/imageProxy.ts`.
 
-1. Edit `lib/api-spec/openapi.yaml`
-2. Run: `pnpm run --filter @workspace/api-spec codegen`
-3. Restart the API Server workflow
+## Database scripts
 
-## Database
+```bash
+pnpm --filter @workspace/db run push          # push schema changes
+pnpm --filter @workspace/db run seed          # (re)seed all products
+pnpm --filter @workspace/db run fix-images    # patch broken image URLs
+```
 
-- Tables: `products`, `orders`, `order_items`
-- Products have: `name`, `description`, `price_kobo`, `image_url`, `images TEXT[]`, `stock`, `category`
-- `images` stores up to 3 photo URLs shown in the product detail gallery
-- To re-seed: check `scripts/` or use `executeSql` via agent
+## API codegen (after changing openapi.yaml)
 
-## User Preferences
+```bash
+pnpm --filter @workspace/api-spec codegen
+```
 
-- Store should look and feel like Jumia Nigeria (orange #F68B1E brand colour)
-- Products must have 3 detailed photos and a thorough description
-- Prices are stored in kobo (multiply naira × 100)
+## User preferences
+
+- Keep existing project structure — do not restructure or migrate to a different stack.
