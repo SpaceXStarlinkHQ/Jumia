@@ -560,6 +560,14 @@ components:
         customerName:
           type: string
           minLength: 1
+        customerPhone:
+          type: string
+        deliveryAddress:
+          type: string
+        deliveryCity:
+          type: string
+        deliveryState:
+          type: string
         items:
           type: array
           items:

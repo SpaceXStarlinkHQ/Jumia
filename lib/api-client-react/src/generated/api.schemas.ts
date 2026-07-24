@@ -140,6 +140,10 @@ export interface CheckoutInput {
   customerEmail: string;
   /** @minLength 1 */
   customerName: string;
+  customerPhone?: string;
+  deliveryAddress?: string;
+  deliveryCity?: string;
+  deliveryState?: string;
   /** @minItems 1 */
   items: CartItem[];
   callbackUrl: string;

@@ -266,6 +266,10 @@ export const UpdateOrderStatusResponse = zod.object({
 export const InitiateCheckoutBody = zod.object({
   "customerEmail": zod.string(),
   "customerName": zod.string().min(1),
+  "customerPhone": zod.string().optional(),
+  "deliveryAddress": zod.string().optional(),
+  "deliveryCity": zod.string().optional(),
+  "deliveryState": zod.string().optional(),
   "items": zod.array(zod.object({
   "productId": zod.number(),
   "quantity": zod.number().min(1)

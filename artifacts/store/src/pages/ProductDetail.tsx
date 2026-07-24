@@ -4,10 +4,27 @@ import { useGetProduct, useListProducts } from "@workspace/api-client-react";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronRight, ShoppingCart, Package, Plus, Minus, Star, Truck, ShieldCheck, ZoomIn } from "lucide-react";
+import { ChevronRight, ShoppingCart, Package, Plus, Minus, Star, Truck, ShieldCheck, ZoomIn, RotateCcw, Clock } from "lucide-react";
 import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
 import { proxyImage } from "@/lib/imageProxy";
 import React from "react";
+
+function getDeliveryEstimate(): string {
+  const now = new Date();
+  // 3-5 business days; if ordered before 3pm add 3 days, else 4 days
+  const hourNow = now.getHours();
+  const daysToAdd = hourNow < 15 ? 3 : 4;
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const est = new Date(now);
+  let added = 0;
+  while (added < daysToAdd) {
+    est.setDate(est.getDate() + 1);
+    const dow = est.getDay();
+    if (dow !== 0 && dow !== 6) added++; // skip weekends
+  }
+  return `${days[est.getDay()]}, ${months[est.getMonth()]} ${est.getDate()}`;
+}
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -187,8 +204,20 @@ export default function ProductDetail() {
               <span className="bg-red-100 text-[#E53935] text-xs font-bold px-2 py-0.5 rounded">-{discount}%</span>
             </div>
             <div className="text-xs text-gray-500 mb-2">Few units left</div>
-            <div className="flex items-center text-[#3CB64A] text-sm font-medium uppercase tracking-wide gap-1.5 mt-2">
-              <Truck className="w-4 h-4" /> FREE Delivery
+            <div className="flex flex-col gap-1.5 mt-3">
+              <div className="flex items-center text-[#3CB64A] text-sm font-medium gap-1.5">
+                <Truck className="w-4 h-4 shrink-0" />
+                <span>FREE Delivery</span>
+                <span className="text-gray-400 font-normal normal-case text-xs">· Est. arrival: <strong className="text-gray-700">{getDeliveryEstimate()}</strong></span>
+              </div>
+              <div className="flex items-center text-gray-500 text-xs gap-1.5">
+                <Clock className="w-3.5 h-3.5 shrink-0 text-[#F68B1E]" />
+                Order before <strong className="text-gray-700">3:00 PM</strong> for faster dispatch
+              </div>
+              <div className="flex items-center text-gray-500 text-xs gap-1.5">
+                <RotateCcw className="w-3.5 h-3.5 shrink-0 text-[#3CB64A]" />
+                15-day free returns · No questions asked
+              </div>
             </div>
           </div>
 
@@ -236,19 +265,23 @@ export default function ProductDetail() {
           <div className="bg-gray-50 rounded border border-gray-100 p-4">
             <div className="text-xs text-gray-500 uppercase font-bold mb-2">Sold by</div>
             <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-800 text-lg">Jumia</span>
-              <span className="border border-[#F68B1E] text-[#F68B1E] text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> JUMIA VERIFIED
+              <span className="font-bold text-gray-800 text-lg">BigDeals Nigeria</span>
+              <span className="border border-[#3CB64A] text-[#3CB64A] text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" /> VERIFIED SELLER
               </span>
             </div>
             <div className="flex items-center gap-6 mt-3 text-sm">
               <div className="flex flex-col">
-                <span className="font-bold text-gray-800">92%</span>
+                <span className="font-bold text-gray-800">98%</span>
                 <span className="text-gray-500 text-xs">Seller Score</span>
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-gray-800">100k+</span>
-                <span className="text-gray-500 text-xs">Followers</span>
+                <span className="font-bold text-gray-800">50k+</span>
+                <span className="text-gray-500 text-xs">Happy Buyers</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-gray-800">4 yrs</span>
+                <span className="text-gray-500 text-xs">On Platform</span>
               </div>
             </div>
           </div>

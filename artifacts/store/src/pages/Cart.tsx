@@ -54,7 +54,7 @@ export default function Cart() {
                       <Link href={`/products/${item.productId}`} className="text-sm sm:text-base text-gray-800 font-medium line-clamp-2 hover:text-[#F68B1E] mb-1">
                         {item.productName}
                       </Link>
-                      <div className="text-xs text-gray-500 mb-1">Seller: Jumia</div>
+                      <div className="text-xs text-gray-500 mb-1">Seller: BigDeals Nigeria</div>
                       <div className="text-xs text-[#3CB64A] font-medium mb-2">In Stock</div>
                       
                       <div className="mt-auto hidden sm:flex items-center gap-4">

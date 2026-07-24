@@ -38,7 +38,7 @@ router.post("/checkout/initiate", async (req, res): Promise<void> => {
     return;
   }
 
-  const { customerEmail, customerName, items, callbackUrl } = parsed.data;
+  const { customerEmail, customerName, customerPhone, deliveryAddress, deliveryCity, deliveryState, items, callbackUrl } = parsed.data;
 
   // Fetch all products in a single query
   const productIds = items.map((i) => i.productId);
@@ -84,7 +84,13 @@ router.post("/checkout/initiate", async (req, res): Promise<void> => {
       amount: totalKobo,
       reference,
       callback_url: callbackUrl,
-      metadata: { customer_name: customerName },
+      metadata: {
+        customer_name: customerName,
+        customer_phone: customerPhone ?? "",
+        delivery_address: deliveryAddress ?? "",
+        delivery_city: deliveryCity ?? "",
+        delivery_state: deliveryState ?? "",
+      },
     }),
   });
 

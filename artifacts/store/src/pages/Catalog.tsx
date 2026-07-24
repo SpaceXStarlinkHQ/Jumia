@@ -11,8 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
 import { proxyImage } from "@/lib/imageProxy";
 
-// Promo ends July 31 2026 23:59 UTC
-const PROMO_END = new Date("2026-07-31T23:59:59Z").getTime();
+// Promo ends Aug 10 2026 23:59 UTC
+const PROMO_END = new Date("2026-08-10T23:59:59Z").getTime();
 
 const FLASH_BADGES = ["🔥 HOT", "⚡ FLASH", "🏷️ DEAL", "⭐ TOP", "🔥 HOT", "🆕 NEW"];
 
@@ -123,7 +123,7 @@ export default function Catalog() {
               />
               <div className="relative z-10 max-w-xs">
                 <span className="inline-flex items-center gap-1.5 bg-[#FFCF00] text-[#1A1A1A] text-[11px] font-black px-3 py-1 rounded-full mb-3">
-                  <Flame className="w-3 h-3" /> FLASH PROMO — ENDS JULY 31
+                  <Flame className="w-3 h-3" /> FLASH PROMO — ENDS AUG 10
                 </span>
                 <h1 className="text-white font-black text-4xl md:text-5xl leading-none mb-2">
                   Up to<br /><span className="text-[#FFCF00]">80% OFF</span>
