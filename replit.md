@@ -1,54 +1,54 @@
-# BigDeals Nigeria — E-Commerce Storefront
+# BigDeals Nigeria
 
-A Jumia-style Nigerian e-commerce platform with a React/Vite storefront, Express API backend, PostgreSQL database, and Paystack payments.
+A Jumia-style Nigerian e-commerce platform with a React storefront, Express API backend, PostgreSQL database, and Paystack payments.
+
+## Stack
+
+- **Frontend**: React + Vite + Tailwind CSS + Radix UI + Framer Motion + TanStack Query + Wouter
+- **Backend**: Node.js + Express v5 + Pino logging
+- **Database**: PostgreSQL with Drizzle ORM
+- **Payments**: Paystack
+- **Package manager**: pnpm (monorepo with workspaces)
+- **API**: OpenAPI spec-driven, Orval-generated React hooks, Zod validation
 
 ## Project structure
 
 ```
 artifacts/
-  api-server/   Express API (port 8080 in dev, /api in preview)
-  store/        React/Vite storefront (port 5173 in dev, /store/ in preview)
-  mockup-sandbox/ Design/component preview tool
+  api-server/   — Express API (port 8080, preview path /api)
+  store/        — React storefront (port 5173, preview path /store/)
+  mockup-sandbox/ — Vite design preview server
 lib/
-  db/           Drizzle ORM schema + migrations + seed
-  api-spec/     OpenAPI spec
-  api-zod/      Zod schemas generated from spec
-  api-client-react/ React Query hooks for the API
+  db/           — Drizzle schema, migrations, seed data
+  api-zod/      — Zod schemas generated from OpenAPI spec
+  api-client/   — Orval-generated React Query hooks
 ```
 
-## Running locally on Replit
+## How to run
 
-Both services start automatically via configured workflows:
+Both workflows are configured and managed by Replit:
 
-- **API Server** — `PORT=8080 pnpm --filter @workspace/api-server run dev`
-- **Store** — `PORT=5173 BASE_PATH=/store/ pnpm --filter @workspace/store run dev`
+- **API Server** — `pnpm --filter @workspace/api-server run dev`
+- **Online Store** — `pnpm --filter @workspace/store run dev`
 
-The Vite dev server proxies `/api` → `http://localhost:8080` so the frontend and backend communicate without extra config.
-
-## Required secrets
-
-| Secret | Purpose |
-|--------|---------|
-| `APP_DATABASE_URL` | PostgreSQL connection string |
-| `PAYSTACK_SECRET_KEY` | Paystack secret key (`sk_live_…` or `sk_test_…`) |
-| `SESSION_SECRET` | Random string for session signing |
-
-## Database
-
-Uses Drizzle ORM with PostgreSQL.
+## Database commands
 
 ```bash
 # Push schema changes
 pnpm --filter @workspace/db run push
 
-# Seed products
+# Seed with sample products
 pnpm --filter @workspace/db run seed
 ```
 
-## Deployment
+## Required secrets
 
-See `DEPLOYMENT.md` for full instructions — the API deploys to Railway and the storefront to Vercel.
+| Secret | Description |
+|---|---|
+| `APP_DATABASE_URL` | PostgreSQL connection string |
+| `PAYSTACK_SECRET_KEY` | Paystack secret key for payments |
+| `SESSION_SECRET` | Session signing key |
 
 ## User preferences
 
-<!-- Agent: save user preferences here -->
+- Keep the existing monorepo structure and stack.
