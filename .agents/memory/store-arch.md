@@ -50,9 +50,9 @@ description: Online store monorepo — key design decisions, env vars, and route
 - If overrides are ever removed from package.json, regenerate lockfile locally before pushing
 
 ## Production deployment
-- API: Railway — `workspaceapi-server-production-974e.up.railway.app` (auto-deploys from GitHub main)
+- API: Railway — `workspaceapi-server-verceltoken.up.railway.app` (auto-deploys from GitHub main; environment named "VERCEL_TOKEN" in Railway dashboard)
 - Frontend: Vercel — `bigdealsnigeria.shop` (auto-deploys from GitHub main)
-- VITE_API_BASE_URL on Vercel = Railway API URL (set to `https://workspaceapi-server-production-974e.up.railway.app`)
+- VITE_API_BASE_URL on Vercel = `https://workspaceapi-server-verceltoken.up.railway.app` (must include https://)
 
 ## Codegen workflow (critical path)
 After any OpenAPI spec change:
