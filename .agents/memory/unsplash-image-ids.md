@@ -21,8 +21,6 @@ Tested via the image proxy at `GET /api/image-proxy?url=<encoded>` — must retu
 
 ### Electronics
 - `1593784991095-a205069470b6` — Samsung Smart TV showing home screen interface (large TV)
-- `1546868871-7041f2a55e12` — wall-mounted TV
-- `1571415060716-baff5f717c37` — TV screen
 - `1608043152269-423dbba4e7e1` — bluetooth speaker on table
 
 ### Phones / Tablets
@@ -106,6 +104,8 @@ These IDs returned 404 from Unsplash:
 - `1530124566582-a618bc2615dc` — rack of hand tools (pliers, scissors) ❌
 - `1560472354-b33ff0c44a43` — Google Search Console analytics dashboard screenshot ❌
 - `1568702846914-96b305d2aaeb` — red apple on white background ❌
+- `1546868871-7041f2a55e12` — smartwatch on wrist ❌ (mislabeled as "wall-mounted TV")
+- `1571415060716-baff5f717c37` — vintage/CRT TV ❌ (mislabeled as "TV screen")
 
 ## WRONG LABELS (old memory had these wrong — DO NOT USE for these purposes)
 - `1570197788417-0e82375c9371` — actually shows ICE CREAM (was labeled "blender") ❌
