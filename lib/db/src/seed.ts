@@ -79,9 +79,9 @@ IN THE BOX: Washing machine, inlet hose, drain hose, user manual, warranty card.
     stock: 18,
     imageUrl: "https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?w=500&q=80",
     images: [
+      // Front-load white washing machine — confirmed correct
       "https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?w=500&q=80",
-      "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=500&q=80",
-      "https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=500&q=80",
+      // TODO: add 2 more confirmed washing machine / laundry room images
     ],
   },
   {
