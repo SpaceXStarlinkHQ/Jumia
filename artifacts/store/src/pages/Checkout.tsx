@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
 import { ChevronRight, CheckCircle2, Lock, ShoppingCart, MapPin, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
@@ -80,7 +81,15 @@ export default function Checkout() {
         toast({
           variant: "destructive",
           title: "Checkout failed",
-          description: "Could not initiate payment. Please try again.",
+          description: "Could not initiate payment. Complete your order on our live store at www.bigdealsnigeria.shop",
+          action: (
+            <ToastAction
+              altText="Go to live store"
+              onClick={() => window.open("https://www.bigdealsnigeria.shop", "_blank")}
+            >
+              Go to live store
+            </ToastAction>
+          ),
         });
       }
     });
