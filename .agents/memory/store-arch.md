@@ -15,6 +15,9 @@ description: Online store monorepo — key design decisions, env vars, and route
 - Uses **Neon PostgreSQL** (external), not Replit's built-in DB
 - Connection string stored in `APP_DATABASE_URL` env var (shared) — takes priority over Replit's runtime-managed `DATABASE_URL` (which cannot be overridden)
 - `lib/db/src/index.ts` and `lib/db/drizzle.config.ts` both check `APP_DATABASE_URL ?? DATABASE_URL`
+- Preview setup requires `APP_DATABASE_URL` to be a complete, resolvable PostgreSQL URL; an invalid external value blocks catalog queries even though the API health endpoint still starts successfully
+  **Why:** The API initializes its pool lazily enough for `/api/healthz` to pass before database-backed routes reveal connection failures.
+  **How to apply:** Validate the external URL by restarting the API and checking `/api/products` before troubleshooting application code; only fall back to `DATABASE_URL` intentionally.
 
 ## Required secrets
 - `PAYSTACK_SECRET_KEY` — used in `artifacts/api-server/src/routes/checkout.ts` as `process.env.PAYSTACK_SECRET_KEY`
