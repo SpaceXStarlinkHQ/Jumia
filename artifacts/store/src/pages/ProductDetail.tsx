@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useGetProduct, useListProducts } from "@workspace/api-client-react";
 import { useCart } from "@/lib/cart";
@@ -43,6 +43,19 @@ export default function ProductDetail() {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   if (isNaN(productId)) {
     return <div>Invalid product ID</div>;
@@ -262,7 +275,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 mb-8 pb-8 border-b border-gray-100 mt-auto">
+          <div ref={ctaRef} className="flex flex-col sm:flex-row gap-3 mb-8 pb-8 border-b border-gray-100 mt-auto">
             <button
               onClick={handleAddToCart}
               disabled={product.stock === 0}
@@ -357,6 +370,40 @@ export default function ProductDetail() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky purchase bar — slides in when CTAs scroll out of view */}
+      {product && (
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${
+            stickyVisible ? "translate-y-0" : "translate-y-full"
+          }`}
+        >
+          <div className="bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.10)] px-4 py-3 flex items-center gap-4 max-w-screen-xl mx-auto">
+            {/* Thumbnail */}
+            {product.images?.[0] && (
+              <img
+                src={proxyImage(product.images[0])}
+                alt=""
+                className="w-12 h-12 rounded-lg object-contain bg-gray-50 border border-gray-100 shrink-0 mix-blend-multiply p-0.5"
+              />
+            )}
+            {/* Name + price */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{product.name}</p>
+              <p className="text-base font-bold text-[#F68B1E] leading-tight">{formatNaira(product.priceKobo)}</p>
+            </div>
+            {/* CTA */}
+            <button
+              onClick={handleAddToCart}
+              disabled={product.stock === 0}
+              className="shrink-0 flex items-center gap-2 bg-[#F68B1E] hover:bg-[#E07B10] active:scale-95 text-white text-sm font-bold px-5 py-2.5 rounded-lg shadow-md transition-all disabled:opacity-50"
+            >
+              <ShoppingCart className="w-4 h-4 fill-current" />
+              Add to Cart
+            </button>
           </div>
         </div>
       )}
