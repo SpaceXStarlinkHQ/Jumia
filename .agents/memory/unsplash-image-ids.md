@@ -100,6 +100,13 @@ These IDs returned 404 from Unsplash:
 `1614812514603-84193dd929c4`, `1548545774-45f85dc47ce5`, `1525351484163-7529414f2adb`,
 `1556910096-6f5e72db7803`
 
+## Wrong Subject (returns 200 but shows wrong thing)
+- `1504893524553-b855bce32c67` — Icelandic canyon/fjord landscape ❌ (was used as washing machine image 3)
+- `1558618666-fcd25c85cd64` — coffee roaster / barista close-up ❌
+- `1530124566582-a618bc2615dc` — rack of hand tools (pliers, scissors) ❌
+- `1560472354-b33ff0c44a43` — Google Search Console analytics dashboard screenshot ❌
+- `1568702846914-96b305d2aaeb` — red apple on white background ❌
+
 ## WRONG LABELS (old memory had these wrong — DO NOT USE for these purposes)
 - `1570197788417-0e82375c9371` — actually shows ICE CREAM (was labeled "blender") ❌
 - `1550583724-b2692b85b150` — actually shows MILK BEING POURED (was labeled "sugar") ❌
