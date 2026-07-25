@@ -131,57 +131,74 @@ export default function ProductDetail() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-4">
-        {/* Left: Image gallery */}
-        <div className="w-full md:w-[400px] lg:w-[480px] shrink-0 space-y-2">
-          {/* Main image */}
-          <div className="bg-white rounded shadow-sm border border-gray-100 p-4 flex items-center justify-center min-h-[300px] md:min-h-[380px] relative group overflow-hidden">
-            {mainImage ? (
-              <>
-                <img
-                  key={mainImage}
-                  src={proxyImage(mainImage) ?? ""}
-                  alt={`${product.name} — view ${selectedImageIdx + 1}`}
-                  className="w-full max-w-[380px] aspect-square object-contain mix-blend-multiply transition-all duration-300"
-                />
-                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-full p-1.5">
-                  <ZoomIn className="w-4 h-4 text-white" />
-                </div>
-                {allImages.length > 1 && (
-                  <div className="absolute bottom-3 left-3 bg-black/30 text-white text-[11px] font-medium px-2 py-0.5 rounded-full">
-                    {selectedImageIdx + 1} / {allImages.length}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full aspect-square flex flex-col items-center justify-center text-gray-300">
-                <Package className="w-24 h-24 mb-4 opacity-50" />
+        {/* Left: Image gallery — Left Rail layout */}
+        <div className="w-full md:w-[400px] lg:w-[480px] shrink-0">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 flex flex-row gap-3 items-start">
+
+            {/* Vertical thumbnail rail (only when multiple images) */}
+            {allImages.length > 1 && (
+              <div className="flex flex-col gap-2.5 shrink-0">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIdx(idx)}
+                    className={`w-[68px] h-[68px] rounded-xl overflow-hidden border-2 bg-white transition-all duration-200 flex items-center justify-center ${
+                      selectedImageIdx === idx
+                        ? "border-[#F68B1E] shadow-sm ring-4 ring-[#F68B1E]/10"
+                        : "border-gray-100 hover:border-[#F68B1E]/50"
+                    }`}
+                    aria-label={`View image ${idx + 1}`}
+                  >
+                    <img
+                      src={proxyImage(img)}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-contain mix-blend-multiply p-1"
+                    />
+                  </button>
+                ))}
               </div>
             )}
-          </div>
 
-          {/* Thumbnails */}
-          {allImages.length > 1 && (
-            <div className="flex gap-2">
-              {allImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedImageIdx(idx)}
-                  className={`w-[80px] h-[80px] shrink-0 rounded border-2 overflow-hidden bg-white flex items-center justify-center transition-all duration-150 ${
-                    selectedImageIdx === idx
-                      ? "border-[#F68B1E] shadow-sm"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
-                  aria-label={`View image ${idx + 1}`}
-                >
+            {/* Main image */}
+            <div className="flex-1 relative rounded-xl bg-gray-50/60 overflow-hidden group aspect-square flex items-center justify-center min-h-[280px] md:min-h-[340px]">
+              {mainImage ? (
+                <>
+                  {/* Counter badge */}
+                  {allImages.length > 1 && (
+                    <div className="absolute top-3 right-3 z-10 bg-[#111] text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
+                      {selectedImageIdx + 1} / {allImages.length}
+                    </div>
+                  )}
+
+                  {/* Image */}
                   <img
-                    src={proxyImage(img)}
-                    alt={`Thumbnail ${idx + 1}`}
-                    className="w-full h-full object-contain mix-blend-multiply p-1"
+                    key={mainImage}
+                    src={proxyImage(mainImage) ?? ""}
+                    alt={`${product.name} — view ${selectedImageIdx + 1}`}
+                    className="w-full h-full object-contain mix-blend-multiply p-6 transition-transform duration-500 ease-out group-hover:scale-105"
                   />
-                </button>
-              ))}
+
+                  {/* Zoom overlay on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white p-3 rounded-full shadow-lg">
+                      <ZoomIn className="w-5 h-5 text-[#111] stroke-[1.5]" />
+                    </div>
+                  </div>
+
+                  {/* Model badge bottom-left */}
+                  <div className="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-sm border border-gray-100">
+                    <span className="text-[10px] font-bold text-[#111] uppercase tracking-widest">
+                      {product.name.split("—")[1]?.trim() || product.category}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="w-full aspect-square flex flex-col items-center justify-center text-gray-300">
+                  <Package className="w-24 h-24 mb-4 opacity-50" />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Right: Details */}
