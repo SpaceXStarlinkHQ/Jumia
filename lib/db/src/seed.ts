@@ -320,16 +320,21 @@ IN THE BOX: iPad, USB-C charge cable, USB-C 20W power adapter.`,
     description: `Slim, fast, and built for work — the HP 15s is the go-to laptop for Nigerian students, professionals, and entrepreneurs.
 
 KEY FEATURES:
-• 15.6-inch FHD IPS display — anti-glare, micro-edge
-• AMD Ryzen 5 5500U processor — 6 cores, up to 4GHz
-• 8GB DDR4 RAM — smooth multitasking
-• 512GB PCIe NVMe SSD — boots in seconds, loads instantly
-• AMD Radeon integrated graphics
-• Wi-Fi 5, Bluetooth 4.2, USB-A×2, USB-C, HDMI
-• Windows 11 Home pre-installed
-• Up to 8.5 hours battery life
+• 15.6-inch FHD IPS display — anti-glare, micro-edge bezels
+• AMD Ryzen 5 5500U — 6 cores, 12 threads, up to 4.0GHz boost
+• 8GB DDR4-3200 RAM — smooth multitasking, upgradeable to 16GB
+• 512GB PCIe NVMe M.2 SSD — boots in under 10 seconds
+• AMD Radeon integrated graphics — handles everyday media and light editing
+• HP Fast Charge — 50% battery in 45 minutes
+• Wi-Fi 5 (2×2 AC), Bluetooth 4.2
+• Ports: USB-A×2, USB-C, HDMI 1.4b, headphone/mic combo
+• Windows 11 Home — pre-installed and activated
+• Up to 8.5 hours mixed-use battery life
+• Weight: 1.75 kg — easy to carry to lectures and meetings
 
-IN THE BOX: Laptop, 65W USB-C charger, documentation.`,
+COLOUR: Natural Silver
+
+IN THE BOX: HP 15s Laptop, 65W USB-C slim power adapter, documentation.`,
     priceKobo: 38_000_000,
     category: "Computing",
     stock: 12,
@@ -345,18 +350,21 @@ IN THE BOX: Laptop, 65W USB-C charger, documentation.`,
     description: `The Lenovo IdeaPad Slim 3 is a powerhouse thin-and-light laptop perfect for everyday computing, video calls, and light creative work. Thin, lightweight, and built for long days — whether you're in the office, at uni, or working from home.
 
 KEY FEATURES:
-• 15.6-inch FHD IPS display — 300 nits, TÜV Rheinland eye-care certified, anti-glare
-• Intel Core i5-1235U — 10-core hybrid architecture (2P + 8E cores)
-• 16GB LPDDR5 RAM — effortless multitasking, no lag
-• 512GB M.2 NVMe SSD — fast, silent, reliable; boots in under 10 seconds
-• Intel Iris Xe Graphics — smooth video playback and light photo/video editing
-• Wi-Fi 6 (802.11ax), Bluetooth 5.1 for fast, stable wireless
-• USB-C with Power Delivery, USB-A ×2, HDMI 1.4, SD card slot
-• Windows 11 Home + Microsoft Office Home & Student pre-loaded
-• Up to 9 hours battery life — all-day use on a single charge
-• 1.62 kg — light enough for your bag every day
+• 15.6-inch FHD IPS display — 300 nits, TÜV Rheinland Low Blue Light certified, anti-glare
+• Intel Core i5-1235U — 10 cores (2P + 8E), up to 4.4GHz boost, 12th Gen
+• 16GB LPDDR5-4800 RAM — effortless multitasking, multiple browser tabs, video calls
+• 512GB M.2 2242 PCIe NVMe SSD — fast, silent, no moving parts
+• Intel Iris Xe integrated graphics — crisp visuals, light photo editing, 4K video playback
+• Wi-Fi 6 (802.11ax), Bluetooth 5.1
+• Ports: USB-A 3.2 Gen 1, USB-A 2.0, USB-C with Power Delivery, HDMI 1.4, 3.5mm combo
+• Microsoft Office 2021 Home & Student — pre-installed and licensed
+• Windows 11 Home — pre-installed and activated
+• Up to 9 hours battery life (65Wh); Rapid Charge: 0→80% in ~1 hour
+• Weight: 1.62 kg — ultraportable for commutes and campus
 
-IN THE BOX: Laptop, 65W slim-tip charger, quick-start guide.`,
+COLOUR: Arctic Grey
+
+IN THE BOX: Lenovo IdeaPad Slim 3, 65W slim-tip AC adapter, documentation.`,
     priceKobo: 45_000_000,
     category: "Computing",
     stock: 10,
