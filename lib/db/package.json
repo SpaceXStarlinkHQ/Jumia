@@ -12,6 +12,7 @@
     "push": "drizzle-kit push --config ./drizzle.config.ts",
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
     "seed": "tsx src/seed.ts",
+    "validate": "tsx src/validate-catalog.ts",
     "fix-images": "tsx src/fix-images.ts",
     "fix-images-v2": "tsx src/fix-images-v2.ts"
   },

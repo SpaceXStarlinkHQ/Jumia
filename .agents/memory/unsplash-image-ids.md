@@ -91,6 +91,19 @@ The `d_transparent.gif` segment causes the CDN to return a blank transparent gif
 - `firmanpowerequipment.com` ✅ (CDN shop URLs work: /cdn/shop/products/ and /cdn/shop/files/)
 - `clorebeauty.com` ❌ not in allowlist (403)
 
+## Additional Confirmed 200 (subject unverified — use cautiously)
+- `1504450758481-7338eba7524a` → 200 (used as Hisense TV secondary primary — unknown subject)
+- `1590602847861-f357a9332bbc` → 200 (unknown subject)
+- `1556742049-0cfed4f6a45d` → 200 (unknown subject)
+- `1571019614242-c5c5dee9f50b` → 200 (likely gym/fitness adjacent — near 1571019613454)
+- `1604671368394-2240d0b1bb6c` → 200 (unknown subject)
+- `1542291026-7eec264c27ff` → 200 (likely sneaker/shoe lifestyle — used for Nike supplemental)
+- `1491553895911-0055eca6402d` → 200 (likely shoe detail — used for Nike/football boot supplemental)
+- `1597350584914-55bb62285896` → 200 (unknown subject)
+- `1611532736597-de2d4265fba3` → 200 (unknown subject)
+- `1543163521-1bf539c55dd2` → 200 (unknown subject)
+- `1503376780353-7e6692767b70` → 200 (unknown subject)
+
 ## Broken / Do Not Use
 These IDs returned 404 from Unsplash:
 `1610557892470-55d9ea80c8db`, `1590041105897-c3b7f07e9ed7`, `1581093458791-9f3c3900df4b`,

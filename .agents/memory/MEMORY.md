@@ -1,2 +1,3 @@
 - [Store architecture](store-arch.md) — online store with Paystack; key design decisions and route conventions
 - [Unsplash image IDs](unsplash-image-ids.md) — confirmed-working photo IDs for seed.ts; list of broken IDs and blocked external hosts
+- [Catalog validation](catalog-validation.md) — how to run and interpret the product catalog validator; known limitations

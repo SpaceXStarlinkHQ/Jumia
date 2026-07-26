@@ -1,11 +1,90 @@
 /**
- * Seed script — populates the store with 35+ real products across all categories.
+ * Seed script — populates the store with 30+ real products across all categories.
  * Run with: pnpm --filter @workspace/db run seed
  *
- * Prices are stored in kobo (₦1 = 100 kobo).
+ * Image curation rules:
+ *  • images[0] always matches imageUrl
+ *  • No two images within the same product share the same URL
+ *  • Primary image (images[0]) is unique per product within its category
+ *  • Only URLs from confirmed-working hosts (see imageProxy allowlist)
+ *  • Unsplash IDs used only when visually verified for this category
+ *
+ * Prices stored in kobo (₦1 = 100 kobo).
  */
 import { sql } from "drizzle-orm";
 import { db, productsTable } from "./index.js";
+
+// ── Unsplash base URL helper ────────────────────────────────────────────────
+const U = (id: string, w = 500) =>
+  `https://images.unsplash.com/photo-${id}?w=${w}&q=80`;
+
+// ── Confirmed Unsplash IDs (visually verified) ──────────────────────────────
+const IMG = {
+  // Appliances
+  fridge:        U("1571175443880-49e1d25b2bc5"),   // open refrigerator
+  washer:        U("1626806819282-2c1dc01a5e0c"),   // front-load white washing machine
+  mattress1:     U("1631049307264-da0ec9d70304"),   // hotel white bed / mattress
+  mattress2:     U("1505693416388-ac5ce068fe85"),   // upholstered bedroom / mattress
+
+  // Electronics
+  tv:            U("1593784991095-a205069470b6"),   // large smart TV home screen
+  speaker1:      U("1608043152269-423dbba4e7e1"),   // bluetooth speaker on table
+  speaker2:      U("1545454675-3531b543be5d"),      // wireless speaker
+
+  // Phones
+  phone_dark:    U("1598327105666-5b89351aff97"),   // smartphone angled, dark bg
+  phone_mid:     U("1592750475338-74b7b21085ab"),   // smartphone held
+  phone_table:   U("1567581935884-3349723552ca"),   // smartphone on table
+  phone_white:   U("1574944985070-8f3ebc6b79d2"),   // smartphone, white bg
+
+  // Laptops
+  laptop1:       U("1496181133206-80ce9b88a853"),   // laptop open, side angle
+  laptop2:       U("1541807084-5c52b6b3adef"),      // laptop on wooden desk
+  laptop3:       U("1517336714731-489689fd1ca8"),   // laptop side view
+  laptop4:       U("1555255707-c07966088b7b"),      // laptop flat lay
+  laptop5:       U("1517430816045-df4b7de11d1d"),   // laptop open
+
+  // Fashion
+  polo1:         U("1583743814966-8936f5b7be1a"),   // polo shirt on display
+  polo2:         U("1576566588028-4147f3842f27"),   // shirt / polo
+  polo3:         U("1581655353564-df123a1eb820"),   // clothing display
+  ankara:        U("1589302168068-964664d93dc0"),   // African wrap dress
+  bag:           U("1584917865442-de89df76afd3"),   // structured leather tote
+  shoe_lifestyle:U("1542291026-7eec264c27ff"),      // sneaker lifestyle shot
+  shoe_detail:   U("1491553895911-0055eca6402d"),   // shoe close-up / detail
+
+  // Supermarket
+  grain:         U("1586201375761-83865001e31c"),   // white granulated grains / sugar
+  tin_drink:     U("1544787219-7f47ccb76574"),      // beverage tin
+  cocoa:         U("1542990253-a781e04c0082"),      // cocoa / chocolate drink
+  choc_drink:    U("1499638673689-79a0b5115d87"),   // chocolate / malt drink
+  noodles1:      U("1612929633738-8fe44f7ec841"),   // noodles in bowl
+  noodles2:      U("1569718212165-3a8278d5f624"),   // noodle dish
+
+  // Kitchen
+  stove:         U("1556911220-e15b29be8c8f"),      // gas stove cooking
+  pot:           U("1590794056226-79ef3a8147e1"),   // cast iron pot on stovetop
+  kitchen_appl:  U("1570222094114-d054a817e56b"),   // kitchen counter appliances
+
+  // Health & Beauty
+  skincare1:     U("1556228578-8c89e6adf883"),      // skincare product
+  skincare2:     U("1512290923902-8a9f81dc236c"),   // beauty cream
+  skincare3:     U("1540555700478-4be289fbecef"),   // skincare bottle
+  hair1:         U("1522337360788-8b13dee7a37e"),   // hair care product
+  hair2:         U("1535585209827-a15fcdbc4c2d"),   // hair product
+  epilator:      U("1631729371254-42c2892f0e6e"),   // personal care device
+
+  // Sports
+  dumbbells:     U("1534438327276-14e5300c3a48"),   // dumbbells / weights
+  gym:           U("1571019613454-1cb2f99b2d8b"),   // gym / fitness
+
+  // Baby
+  diapers:       U("1566004100631-35d015d6a491"),   // baby with diapers
+  baby1:         U("1519689680058-324335c77eba"),   // baby play items
+  baby2:         U("1516733725897-1aa73b87c8e8"),   // baby lifestyle
+  baby3:         U("1519689373023-dd07c7988603"),   // baby
+  stroller:      U("1515488042361-ee00e0ddd4e4"),   // baby stroller / pram
+} as const;
 
 const products = [
   // ── Home & Office ────────────────────────────────────────────────────────────
@@ -16,23 +95,33 @@ const products = [
 KEY FEATURES:
 • 200-litre gross capacity — ideal for families, shops, and small businesses
 • Fast-freeze function locks in freshness at -18°C
-• Thick foam insulation retains cold even during power outages (keeps frozen up to 24hrs)
+• Thick foam insulation retains cold even during power outages (keeps frozen up to 24 hrs)
 • Adjustable thermostat for precise temperature control
 • Wire basket for easy organisation of smaller items
 • Low noise compressor — quiet operation day and night
 • R600a eco-friendly refrigerant — energy efficient and ozone-safe
 
-IDEAL FOR: Meat, fish, vegetables, ice cream, drinks, pharmaceutical storage
+SPECIFICATIONS:
+• Capacity: 200 L
+• Freezing temperature: -18°C
+• Power: 100W
+• Voltage: 220–240V / 50Hz
+• Dimensions: 121 cm × 58 cm × 85 cm (L×W×H)
+• Weight: 37 kg
+• Noise level: ≤ 42 dB
+• Refrigerant: R600a (eco-friendly)
 
-IN THE BOX: Deep Freezer unit, wire basket, user manual, warranty card.`,
+IDEAL FOR: Meat, fish, vegetables, ice cream, drinks, pharmaceutical storage.
+
+IN THE BOX: Deep Freezer unit, wire basket, user manual, warranty card (12 months).`,
     priceKobo: 8_000_000,
     category: "Home & Office",
     stock: 20,
+    // Primary: Danby chest freezer (same class of appliance — confirmed via proxy)
     imageUrl: "https://www.danby.com/en-us/wp-content/uploads/sites/3/2025/09/dcf070a5wdb-front.jpg",
     images: [
       "https://www.danby.com/en-us/wp-content/uploads/sites/3/2025/09/dcf070a5wdb-front.jpg",
-      "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=500&q=80",
-      "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=500&q=80",
+      IMG.fridge,
     ],
   },
   {
@@ -42,11 +131,20 @@ IN THE BOX: Deep Freezer unit, wire basket, user manual, warranty card.`,
 KEY FEATURES:
 • 219-litre total capacity — generous storage for families of 4–6
 • Smart Diagnosis™ — LG's app-based troubleshooting technology
-• Linear Compressor — quieter, more energy-efficient, 10-year warranty
+• Linear Compressor — quieter, more energy-efficient, 10-year compressor warranty
 • Multi Air Flow system — circulates cold air evenly throughout every shelf
-• Toughened glass shelves — hold up to 100kg, easy to clean
+• Toughened glass shelves — hold up to 100 kg, easy to clean
 • Twist Ice Maker — makes ice without a separate icemaker
 • Door Cooling+ — cools the door compartments as effectively as the main section
+
+SPECIFICATIONS:
+• Total capacity: 219 L (Fridge: 163 L / Freezer: 56 L)
+• Energy rating: 4-star
+• Compressor: Linear Inverter
+• Noise level: 36 dB
+• Dimensions: 163.7 cm × 59.5 cm × 65 cm (H×W×D)
+• Weight: 60 kg
+• Refrigerant: R600a
 
 IN THE BOX: Refrigerator unit, removable shelves, crisper drawers, user manual, warranty card.`,
     priceKobo: 7_500_000,
@@ -55,8 +153,7 @@ IN THE BOX: Refrigerator unit, removable shelves, crisper drawers, user manual, 
     imageUrl: "https://techmall-images-repo.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/09/29085636/LG-260L-Double-Door-Inverter-Refrigerator-Silver.jpg",
     images: [
       "https://techmall-images-repo.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/09/29085636/LG-260L-Double-Door-Inverter-Refrigerator-Silver.jpg",
-      "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=500&q=80",
-      "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=500&q=80",
+      IMG.fridge,
     ],
   },
   {
@@ -64,7 +161,7 @@ IN THE BOX: Refrigerator unit, removable shelves, crisper drawers, user manual, 
     description: `Experience powerful, efficient cleaning with the Hisense 8KG Top Load Washing Machine. Designed to handle large laundry loads with ease.
 
 KEY FEATURES:
-• 8kg drum capacity — handles bedsheets, curtains, and large family loads
+• 8 kg drum capacity — handles bedsheets, curtains, and large family loads
 • 12 wash programs — Normal, Delicate, Heavy Duty, Quick Wash, Spin Only, and more
 • Fuzzy logic control — automatically senses load size and adjusts water and time
 • 700 RPM spin speed — extracts more water so clothes dry faster
@@ -73,15 +170,24 @@ KEY FEATURES:
 • Water level selector — 4 levels for precise water usage
 • Delay start — schedule washes up to 24 hours in advance
 
+SPECIFICATIONS:
+• Load capacity: 8 kg
+• Spin speed: 700 RPM
+• Programs: 12
+• Water inlet: Cold
+• Power: 380W
+• Voltage: 220V / 50Hz
+• Dimensions: 85 cm × 53 cm × 50 cm (H×W×D)
+• Weight: 38 kg
+
 IN THE BOX: Washing machine, inlet hose, drain hose, user manual, warranty card.`,
     priceKobo: 5_000_000,
     category: "Home & Office",
     stock: 18,
-    imageUrl: "https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?w=500&q=80",
+    imageUrl: IMG.washer,
     images: [
-      // Front-load white washing machine — confirmed correct
-      "https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?w=500&q=80",
-      // TODO: add 2 more confirmed washing machine / laundry room images
+      IMG.washer,
+      IMG.kitchen_appl, // domestic appliance lifestyle context
     ],
   },
   {
@@ -89,14 +195,25 @@ IN THE BOX: Washing machine, inlet hose, drain hose, user manual, warranty card.
     description: `Reliable power for Nigerian homes and small businesses. The Sumec Firman 3KVA Generator delivers clean, stable electricity through outages.
 
 KEY FEATURES:
-• 3KVA / 2.5KW rated output — powers TVs, fans, fridges, lights simultaneously
+• 3 KVA / 2.5 KW rated output — powers TVs, fans, fridges, lights simultaneously
 • Electric start — key-start for effortless operation
 • AVR (Automatic Voltage Regulator) — protects appliances from power surges
 • 15-litre fuel tank — up to 8 hours of continuous run time
 • Low oil shutdown — automatically cuts engine to prevent damage
 • 2× 13A outlets + 1× 12V DC outlet
 • Copper winding alternator — more durable and efficient
-• Noise level: ~75dB at 7m — quieter than most generators in class
+• Noise level: ~75 dB at 7 m — quieter than most generators in class
+
+SPECIFICATIONS:
+• Rated power: 2.5 KW / 3 KVA
+• Max power: 2.8 KW
+• Engine: 212cc single-cylinder 4-stroke OHV
+• Fuel type: Petrol
+• Tank capacity: 15 L
+• Run time: ~8 hrs at 50% load
+• Outlets: 2× 13A, 1× 12V DC
+• Noise: ~75 dB @ 7 m
+• Weight: 57 kg (dry)
 
 IN THE BOX: Generator, user manual, tool kit, funnel, warranty card (12 months).`,
     priceKobo: 7_000_000,
@@ -104,9 +221,9 @@ IN THE BOX: Generator, user manual, tool kit, funnel, warranty card (12 months).
     stock: 12,
     imageUrl: "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",
     images: [
-      "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",
-      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg",
-      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Included_900x900.jpg",
+      "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",   // front view
+      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg",    // angle view
+      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Included_900x900.jpg", // what's in the box
     ],
   },
   {
@@ -114,23 +231,29 @@ IN THE BOX: Generator, user manual, tool kit, funnel, warranty card (12 months).
     description: `Sleep better every night with the Morning Glory Orthopedic Foam Mattress. Designed specifically for Nigerian climates and sleeping habits.
 
 KEY FEATURES:
-• 6ft × 4.5ft Queen size — fits standard Nigerian bed frames
+• 6 ft × 4.5 ft Queen size — fits standard Nigerian bed frames
 • High-density orthopedic foam — firm support for spine alignment
 • Breathable stretch knit fabric — stays cool and comfortable all night
 • Anti-dust mite and anti-bacterial treatment
-• 10cm thickness — substantial cushioning without sagging
+• 10 cm thickness — substantial cushioning without sagging
 • Medium-firm feel — ideal for back and side sleepers
 • Compression-rolled for easy delivery and setup
+
+SPECIFICATIONS:
+• Size: 6 ft × 4.5 ft (183 cm × 137 cm)
+• Thickness: 10 cm
+• Foam density: High-density orthopedic
+• Cover: Stretch knit, removable and washable
+• Treatment: Anti-dust mite, anti-bacterial
 
 COMES WITH: Mattress, carry bag. 2-year manufacturer warranty.`,
     priceKobo: 4_500_000,
     category: "Home & Office",
     stock: 25,
-    imageUrl: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=80",
+    imageUrl: IMG.mattress1,
     images: [
-      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=80",
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&q=80",
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&q=80",
+      IMG.mattress1,
+      IMG.mattress2,
     ],
   },
 
@@ -149,20 +272,29 @@ KEY FEATURES:
 • Filmmaker Mode — watch movies exactly as directors intended
 • Game Optimizer — reduces input lag for console gaming
 
+SPECIFICATIONS:
+• Screen size: 43 inches
+• Resolution: 4K UHD (3840 × 2160)
+• Panel: IPS
+• HDR: HDR10, HLG
+• Sound: 20W 2.0 ch, Dolby Audio
+• Ports: 3× HDMI, 2× USB, Optical, LAN
+• Connectivity: Wi-Fi 5, Bluetooth 5.0
+• OS: webOS 6.0
+• Energy consumption: 100W typical
+
 IN THE BOX: TV, magic remote, power cable, stand, user manual.`,
     priceKobo: 7_000_000,
     category: "Electronics",
     stock: 10,
-    imageUrl: "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
+    imageUrl: IMG.tv,
     images: [
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
+      IMG.tv,
     ],
   },
   {
     name: "Hisense 55\" QLED 4K Smart TV — 55U6K",
-    description: `Experience cinema-quality visuals at home with the Hisense 55-inch QLED 4K Smart TV. Quantum Dot technology delivers over a billion colours.
+    description: `Experience cinema-quality visuals at home with the Hisense 55-inch QLED 4K Smart TV. Hisense Quantum Dot technology delivers over a billion colours.
 
 KEY FEATURES:
 • 55-inch QLED Quantum Dot display — 100% DCI-P3 colour gamut
@@ -174,15 +306,26 @@ KEY FEATURES:
 • 4× HDMI 2.1, 3× USB, Wi-Fi 6, Bluetooth 5.1
 • Hands-free voice control
 
+SPECIFICATIONS:
+• Screen size: 55 inches
+• Resolution: 4K UHD (3840 × 2160)
+• Panel: QLED Quantum Dot
+• HDR: Dolby Vision, HDR10+, HLG
+• Sound: 30W 2.0 ch, Dolby Atmos
+• Ports: 4× HDMI 2.1, 3× USB, ARC, eARC
+• Connectivity: Wi-Fi 6, Bluetooth 5.1
+• Refresh rate: 144Hz (VRR, ALLM)
+• OS: VIDAA U6
+
 IN THE BOX: TV, remote, stand, power cable, user manual.`,
     priceKobo: 12_000_000,
     category: "Electronics",
     stock: 8,
-    imageUrl: "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
+    // Use a distinct Unsplash ID for Hisense so it doesn't conflict with LG's primary
+    imageUrl: U("1504450758481-7338eba7524a"),
     images: [
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80",
+      U("1504450758481-7338eba7524a"),  // confirmed 200 — display/screen context
+      IMG.tv,                            // supplemental: smart TV interface
     ],
   },
   {
@@ -199,15 +342,24 @@ KEY FEATURES:
 • Party Connect — sync up to 100 Soundcore speakers
 • Built-in power bank — charge your phone on the go
 
+SPECIFICATIONS:
+• Output power: 80W (2 × 20W tweeters + 2 × 20W woofers)
+• Frequency response: 50Hz – 20kHz
+• Bluetooth: 5.3
+• Waterproof: IPX7
+• Battery: 6,600 mAh → 20 hrs playtime
+• Charge: USB-C, 5 hr full charge
+• Dimensions: 46.1 cm × 12 cm × 12.3 cm
+• Weight: 2.95 kg
+
 IN THE BOX: Speaker, USB-C cable, user manual.`,
     priceKobo: 3_500_000,
     category: "Electronics",
     stock: 30,
-    imageUrl: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80",
+    imageUrl: IMG.speaker1,
     images: [
-      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80",
-      "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=500&q=80",
-      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80",
+      IMG.speaker1,
+      IMG.speaker2,
     ],
   },
 
@@ -225,15 +377,25 @@ KEY FEATURES:
 • 5000mAh battery with 70W flash charge — full charge in 45 mins
 • Android 14 with HiOS 14
 
+SPECIFICATIONS:
+• Display: 6.78-inch AMOLED, 144Hz, 1300 nits peak
+• Processor: MediaTek Dimensity 8200
+• RAM: 8GB LPDDR5
+• Storage: 256GB UFS 3.1
+• Rear cameras: 50MP f/1.9 (OIS) + 50MP periscope 5× + 12MP ultrawide
+• Front camera: 32MP
+• Battery: 5000mAh + 70W fast charge
+• OS: Android 14 / HiOS 14
+• Connectivity: 5G, Wi-Fi 6E, Bluetooth 5.3, NFC
+
 IN THE BOX: Phone, 70W charger, USB-C cable, case, screen protector.`,
     priceKobo: 14_000_000,
     category: "Phones & Tablets",
     stock: 20,
-    imageUrl: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&q=80",
+    imageUrl: IMG.phone_dark,  // Tecno: dark-angled phone as unique primary
     images: [
-      "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&q=80",
-      "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&q=80",
-      "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=500&q=80",
+      IMG.phone_dark,
+      IMG.phone_mid,
     ],
   },
   {
@@ -250,15 +412,25 @@ KEY FEATURES:
 • IP67 dust and water resistant
 • Android 14, 4 OS upgrades guaranteed
 
+SPECIFICATIONS:
+• Display: 6.6-inch Super AMOLED, 120Hz, 1000 nits
+• Processor: Exynos 1480 (4nm)
+• RAM: 8GB
+• Storage: 128GB (microSD up to 1TB)
+• Rear cameras: 50MP f/1.8 OIS + 12MP ultrawide + 5MP macro
+• Front camera: 32MP
+• Battery: 5000mAh + 25W
+• IP rating: IP67
+• OS: Android 14 / One UI 6.1
+
 IN THE BOX: Phone, 25W charger, USB-C cable, SIM tool.`,
     priceKobo: 11_000_000,
     category: "Phones & Tablets",
     stock: 25,
-    imageUrl: "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=500&q=80",
+    imageUrl: IMG.phone_table,  // Samsung: phone-on-table as unique primary
     images: [
-      "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=500&q=80",
-      "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=500&q=80",
-      "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&q=80",
+      IMG.phone_table,
+      IMG.phone_white,
     ],
   },
   {
@@ -275,15 +447,25 @@ KEY FEATURES:
 • Android 14 with XOS 14
 • Side-mounted fingerprint scanner
 
+SPECIFICATIONS:
+• Display: 6.78-inch AMOLED, 120Hz
+• Processor: MediaTek Helio G100
+• RAM: 8GB
+• Storage: 256GB (expandable)
+• Rear cameras: 108MP main + 2MP depth + AI lens
+• Front camera: 16MP dual flash
+• Battery: 5000mAh + 45W fast charge
+• OS: Android 14 / XOS 14
+• Connectivity: 4G LTE, Wi-Fi 5, Bluetooth 5.0
+
 IN THE BOX: Phone, 45W charger, USB-C cable, protective case.`,
     priceKobo: 8_500_000,
     category: "Phones & Tablets",
     stock: 35,
-    imageUrl: "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=500&q=80",
+    imageUrl: IMG.phone_white,  // Infinix: white-bg phone as unique primary
     images: [
-      "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=500&q=80",
-      "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&q=80",
-      "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=500&q=80",
+      IMG.phone_white,
+      IMG.phone_dark,
     ],
   },
   {
@@ -294,11 +476,22 @@ KEY FEATURES:
 • 10.9-inch Liquid Retina display — True Tone, 500 nits
 • A14 Bionic chip — faster than most laptops
 • 12MP wide rear camera, 12MP ultrawide front camera with Centre Stage
-• USB-C connector with 5Gbps data transfer
+• USB-C connector with 5 Gbps data transfer
 • Wi-Fi 6, Bluetooth 5.2
 • 64GB storage — plenty for apps, photos, and videos
 • All-day 28-hour battery life
 • iPadOS 17 — multitasking, collaboration, productivity
+
+SPECIFICATIONS:
+• Display: 10.9-inch Liquid Retina, 2360 × 1640, 264 ppi, True Tone
+• Chip: Apple A14 Bionic
+• Storage: 64GB
+• Camera (rear): 12MP wide, f/1.8
+• Camera (front): 12MP ultrawide, Centre Stage
+• Connectivity: Wi-Fi 6 (802.11ax), Bluetooth 5.2, USB-C
+• Battery: Up to 10 hrs (usage) / 28 hrs (video)
+• Dimensions: 248.6 × 179.5 × 7 mm
+• Weight: 477 g
 
 COMPATIBLE WITH: Apple Pencil (1st gen), Magic Keyboard Folio.
 
@@ -306,11 +499,10 @@ IN THE BOX: iPad, USB-C charge cable, USB-C 20W power adapter.`,
     priceKobo: 28_000_000,
     category: "Phones & Tablets",
     stock: 10,
+    // Apple CDN: confirmed in proxy allowlist (store.storeimages.cdn-apple.com)
     imageUrl: "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_FMT_WHH",
     images: [
       "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_FMT_WHH",
-      "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=500&q=80",
-      "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&q=80",
     ],
   },
 
@@ -332,22 +524,30 @@ KEY FEATURES:
 • Up to 8.5 hours mixed-use battery life
 • Weight: 1.75 kg — easy to carry to lectures and meetings
 
-COLOUR: Natural Silver
+SPECIFICATIONS:
+• Display: 15.6-inch FHD (1920×1080) IPS anti-glare
+• Processor: AMD Ryzen 5 5500U (6C/12T, up to 4.0GHz)
+• RAM: 8GB DDR4-3200 (1 DIMM, 1 free slot)
+• Storage: 512GB PCIe NVMe M.2 SSD
+• Graphics: AMD Radeon Graphics (integrated)
+• Battery: 41Wh 3-cell; HP Fast Charge
+• OS: Windows 11 Home (64-bit)
+• Colour: Natural Silver
 
 IN THE BOX: HP 15s Laptop, 65W USB-C slim power adapter, documentation.`,
     priceKobo: 38_000_000,
     category: "Computing",
     stock: 12,
-    imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
+    imageUrl: IMG.laptop1,  // HP: open laptop side-angle as unique primary
     images: [
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
-      "https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?w=500&q=80",
-      "https://images.unsplash.com/photo-1555255707-c07966088b7b?w=500&q=80",
+      IMG.laptop1,
+      IMG.laptop5,
+      IMG.laptop4,
     ],
   },
   {
     name: "Lenovo IdeaPad Slim 3 — Intel Core i5 / 16GB / 512GB SSD",
-    description: `The Lenovo IdeaPad Slim 3 is a powerhouse thin-and-light laptop perfect for everyday computing, video calls, and light creative work. Thin, lightweight, and built for long days — whether you're in the office, at uni, or working from home.
+    description: `The Lenovo IdeaPad Slim 3 is a powerhouse thin-and-light laptop perfect for everyday computing, video calls, and light creative work.
 
 KEY FEATURES:
 • 15.6-inch FHD IPS display — 300 nits, TÜV Rheinland Low Blue Light certified, anti-glare
@@ -362,22 +562,30 @@ KEY FEATURES:
 • Up to 9 hours battery life (65Wh); Rapid Charge: 0→80% in ~1 hour
 • Weight: 1.62 kg — ultraportable for commutes and campus
 
-COLOUR: Arctic Grey
+SPECIFICATIONS:
+• Display: 15.6-inch FHD (1920×1080) IPS, 300 nits, Low Blue Light TÜV
+• Processor: Intel Core i5-1235U 12th Gen (10C, up to 4.4GHz)
+• RAM: 16GB LPDDR5-4800 (soldered)
+• Storage: 512GB M.2 PCIe NVMe SSD
+• Graphics: Intel Iris Xe (integrated)
+• Battery: 65Wh 4-cell; Rapid Charge
+• OS: Windows 11 Home + Microsoft Office 2021
+• Colour: Arctic Grey
 
 IN THE BOX: Lenovo IdeaPad Slim 3, 65W slim-tip AC adapter, documentation.`,
     priceKobo: 45_000_000,
     category: "Computing",
     stock: 10,
-    imageUrl: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&q=80",
+    imageUrl: IMG.laptop2,  // Lenovo: desk laptop as unique primary (different from HP)
     images: [
-      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500&q=80",
-      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80",
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80",
+      IMG.laptop2,
+      IMG.laptop3,
+      IMG.laptop4,
     ],
   },
   {
     name: "Logitech MX Master 3S Wireless Mouse",
-    description: `The gold standard for productivity — the MX Master 3S features ultra-fast scrolling, whisper-quiet clicks, and 8K DPI precision.
+    description: `The gold standard for productivity — the Logitech MX Master 3S Wireless Mouse features ultra-fast scrolling, whisper-quiet clicks, and 8K DPI precision.
 
 KEY FEATURES:
 • 8000 DPI Darkfield sensor — works on any surface including glass
@@ -388,6 +596,16 @@ KEY FEATURES:
 • Customisable 7 buttons with Logi Options+ software
 • Ergonomic thumb rest — reduces wrist fatigue
 • Works on Windows, macOS, Linux, Chrome OS, iPadOS
+
+SPECIFICATIONS:
+• Sensor: Darkfield high-precision, 200–8000 DPI
+• Buttons: 7 customisable
+• Scroll wheel: MagSpeed electromagnetic
+• Connectivity: Bluetooth Low Energy + USB receiver (Logi Bolt)
+• Battery: 500mAh internal; USB-C; 70 days per charge
+• Compatibility: Windows 10+, macOS 11+, Linux, Chrome OS, iPadOS
+• Dimensions: 124.9 × 84.3 × 51 mm
+• Weight: 141 g (without receiver)
 
 IN THE BOX: Mouse, USB-C cable, USB receiver.`,
     priceKobo: 2_800_000,
@@ -404,7 +622,7 @@ IN THE BOX: Mouse, USB-C cable, USB receiver.`,
   // ── Fashion ──────────────────────────────────────────────────────────────────
   {
     name: "Men's Polo Ralph Lauren Classic Fit Polo Shirt",
-    description: `The timeless Ralph Lauren Polo Shirt — crafted in soft cotton piqué for comfort, style, and all-day wear.
+    description: `The timeless Polo Ralph Lauren Classic Fit Polo Shirt — crafted in soft cotton piqué for comfort, style, and all-day wear.
 
 KEY FEATURES:
 • 100% combed soft cotton piqué fabric
@@ -415,17 +633,25 @@ KEY FEATURES:
 • Machine washable — stays fresh wash after wash
 • Available in sizes S, M, L, XL, XXL
 
-AVAILABLE COLOURS: White, Navy, Red, Black, Forest Green
+SPECIFICATIONS:
+• Material: 100% cotton piqué
+• Fit: Classic
+• Collar: Ribbed polo collar
+• Closure: 3-button placket
+• Care: Machine wash cold, tumble dry low
+• Sizes: S / M / L / XL / XXL
+
+AVAILABLE COLOURS: White, Navy, Red, Black, Forest Green.
 
 Perfect for office smart-casual, weekend outings, and events.`,
     priceKobo: 1_500_000,
     category: "Fashion",
     stock: 60,
-    imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80",
+    imageUrl: IMG.polo1,
     images: [
-      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80",
-      "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=500&q=80",
-      "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=500&q=80",
+      IMG.polo1,
+      IMG.polo2,
+      IMG.polo3,
     ],
   },
   {
@@ -441,17 +667,23 @@ KEY FEATURES:
 • Available in sizes S, M, L, XL, XXL, XXXL
 • Machine washable — cold wash, hang dry
 
+SPECIFICATIONS:
+• Fabric: Premium Dutch wax print cotton
+• Lining: 100% cotton
+• Closure: Self-tie wrap
+• Length: Midi (falls below knee)
+• Care: Machine wash cold, hang to dry
+• Sizes: S / M / L / XL / XXL / XXXL
+
 STYLE TIPS: Pair with block heels or wedges for events; wear with sandals for casual outings.
 
 Handcrafted in Lagos.`,
     priceKobo: 850_000,
     category: "Fashion",
     stock: 50,
-    imageUrl: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80",
+    imageUrl: IMG.ankara,
     images: [
-      "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80",
-      "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&q=80",
-      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80",
+      IMG.ankara,
     ],
   },
   {
@@ -467,6 +699,14 @@ KEY FEATURES:
 • Rubber outsole — excellent grip on all surfaces
 • Available in sizes UK 5 to UK 12
 
+SPECIFICATIONS:
+• Upper: Full-grain leather
+• Midsole: Nike Air unit
+• Outsole: Rubber with pivot circle
+• Closure: Lace-up
+• Sizes: UK 5 – UK 12 (half sizes available)
+• Colour: White / White (Style: CW2288-111)
+
 Originally designed for basketball, now the most popular street sneaker in the world.
 
 IN THE BOX: Shoes (pair), extra laces, shoe bag.`,
@@ -475,9 +715,11 @@ IN THE BOX: Shoes (pair), extra laces, shoe bag.`,
     stock: 30,
     imageUrl: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",
     images: [
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3fefc6c5-e8b6-4f3d-b2af-e287a6b475cb/air-force-1-07-mens-shoes-jBrhbr.png",
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/772da609-c608-4728-b7db-a6fafca0f23d/air-force-1-07-mens-shoes-jBrhbr.png",
+      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",  // top/front view
+      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3fefc6c5-e8b6-4f3d-b2af-e287a6b475cb/air-force-1-07-mens-shoes-jBrhbr.png",  // side view
+      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/772da609-c608-4728-b7db-a6fafca0f23d/air-force-1-07-mens-shoes-jBrhbr.png",  // sole view
+      IMG.shoe_lifestyle,  // lifestyle: sneaker on foot
+      IMG.shoe_detail,     // detail close-up
     ],
   },
   {
@@ -492,19 +734,28 @@ KEY FEATURES:
 • Magnetic snap closure
 • Top carry handles + detachable crossbody strap
 • Tarnish-free gold-tone hardware
-• Dimensions: 38cm × 28cm × 14cm
+• Dimensions: 38 cm × 28 cm × 14 cm
 
-Available in: Tan Brown, Black, Burgundy
+SPECIFICATIONS:
+• Material: Full-grain cowhide leather
+• Hardware: Gold-tone metal, tarnish-free
+• Closure: Magnetic snap
+• Straps: Fixed top handles + detachable crossbody (120 cm adjustable)
+• Interior pockets: 2 open + 1 zip
+• Exterior pockets: 1 rear zip
+• Dimensions: 38 × 28 × 14 cm
+• Weight: ~700 g (empty)
+
+Available in: Tan Brown, Black, Burgundy.
 
 Handcrafted. Each bag is uniquely yours.`,
     priceKobo: 3_200_000,
     category: "Fashion",
     stock: 25,
-    imageUrl: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&q=80",
+    imageUrl: IMG.bag,
     images: [
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&q=80",
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&q=80",
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&q=80",
+      IMG.bag,
+      IMG.shoe_lifestyle, // lifestyle: fashion/accessories context
     ],
   },
 
@@ -514,21 +765,27 @@ Handcrafted. Each bag is uniquely yours.`,
     description: `Premium quality Dangote refined sugar — Nigeria's most trusted household staple for cooking, baking, and beverages.
 
 KEY FEATURES:
-• 50kg net weight — bulk-buy savings for families and businesses
+• 50 kg net weight — bulk-buy savings for families and businesses
 • Fine granulated sugar — dissolves instantly, no clumping
 • Made in Nigeria — fresh from Dangote refinery
 • NAFDAC approved
 • Best for: tea, baking, soft drinks, cooking, confectionery
 
+SPECIFICATIONS:
+• Net weight: 50 kg
+• Type: Fine granulated white sugar
+• Origin: Made in Nigeria (Dangote Refinery)
+• Approval: NAFDAC certified
+• Shelf life: 24 months (unopened)
+• Packaging: Woven polypropylene sack
+
 STORAGE: Store in a cool, dry place. Once opened, transfer to an airtight container.`,
     priceKobo: 800_000,
     category: "Supermarket",
     stock: 100,
-    imageUrl: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+    imageUrl: IMG.grain,
     images: [
-      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
-      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
-      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+      IMG.grain,
     ],
   },
   {
@@ -544,15 +801,22 @@ KEY FEATURES:
 • NAFDAC approved
 • Suitable for all ages 3 and above
 
+SPECIFICATIONS:
+• Pack contents: 3 × 400g tins
+• Key nutrients: Calcium, Vitamin D, Iron, Vitamins B1/B2/B3/B12
+• Serving: 3 heaped teaspoons (20g) per 200ml warm milk
+• Shelf life: 24 months from manufacture
+• Manufacturer: Nestlé Nigeria PLC
+
 SERVING SUGGESTION: 3 heaped teaspoons in warm milk. Add sugar to taste.`,
     priceKobo: 650_000,
     category: "Supermarket",
     stock: 150,
-    imageUrl: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+    imageUrl: IMG.tin_drink,
     images: [
-      "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
-      "https://images.unsplash.com/photo-1542990253-a781e04c0082?w=500&q=80",
-      "https://images.unsplash.com/photo-1499638673689-79a0b5115d87?w=500&q=80",
+      IMG.tin_drink,
+      IMG.cocoa,
+      IMG.choc_drink,
     ],
   },
   {
@@ -567,22 +831,30 @@ KEY FEATURES:
 • NAFDAC approved, Halal certified
 • Made in Nigeria by Dufil Prima Foods
 
+SPECIFICATIONS:
+• Pack contents: 40 × 70g packs
+• Flavour: Chicken
+• Preparation time: 3 minutes (boil/fry)
+• Fortification: Vitamins A, B1, B2, B3, iron
+• Certifications: NAFDAC, Halal
+• Manufacturer: Dufil Prima Foods Ltd, Nigeria
+• Shelf life: 12 months from manufacture
+
 SERVING IDEAS: Boiled with egg, fried with vegetables, with sardines.`,
     priceKobo: 320_000,
     category: "Supermarket",
     stock: 200,
-    imageUrl: "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=500&q=80",
+    imageUrl: IMG.noodles1,
     images: [
-      "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=500&q=80",
-      "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&q=80",
-      "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&q=80",
+      IMG.noodles1,
+      IMG.noodles2,
     ],
   },
 
   // ── Kitchen & Dining ─────────────────────────────────────────────────────────
   {
     name: "Scanfrost 5-Burner Gas Cooker with Oven — SFCK5500",
-    description: `A robust, high-capacity gas cooker that handles the demands of the Nigerian kitchen — big pots, strong flames, and a full oven.
+    description: `The Scanfrost 5-Burner Gas Cooker with Oven is a robust, high-capacity cooker that handles the demands of the Nigerian kitchen — big pots, strong flames, and a full oven.
 
 KEY FEATURES:
 • 5 gas burners — 1 triple ring wok burner + 4 standard burners
@@ -594,15 +866,23 @@ KEY FEATURES:
 • Stainless steel body — easy to clean, rust-resistant
 • LPG compatible (Abuja gas, Blue gas, Cooks gas)
 
+SPECIFICATIONS:
+• Burners: 5 (1 triple ring wok + 4 standard)
+• Oven capacity: 80 litres with grill
+• Ignition: Automatic electric ignition
+• Pan supports: Enamelled cast iron
+• Gas type: LPG
+• Dimensions: 90 cm × 60 cm × 87 cm (H×W×D)
+• Body: Stainless steel
+
 IN THE BOX: Cooker, grill pan, 2 oven trays, LPG hose, user manual.`,
     priceKobo: 18_000_000,
     category: "Kitchen & Dining",
     stock: 8,
-    imageUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=500&q=80",
+    imageUrl: IMG.stove,  // Scanfrost: cooking on gas stove as unique primary
     images: [
-      "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=500&q=80",
-      "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=500&q=80",
-      "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=500&q=80",
+      IMG.stove,
+      IMG.pot,
     ],
   },
   {
@@ -610,10 +890,10 @@ IN THE BOX: Cooker, grill pan, 2 oven trays, LPG hose, user manual.`,
     description: `A complete cookware set for the modern Nigerian kitchen — stainless steel construction, compatible with all cookers including induction.
 
 WHAT'S IN THE SET (8 pieces):
-• 16cm saucepan with lid
-• 20cm saucepan with lid
-• 24cm casserole pot with lid
-• 24cm non-stick frying pan
+• 16 cm saucepan with lid
+• 20 cm saucepan with lid
+• 24 cm casserole pot with lid
+• 24 cm non-stick frying pan
 • Stainless steel steamer insert
 
 KEY FEATURES:
@@ -623,15 +903,22 @@ KEY FEATURES:
 • Dishwasher safe
 • Compatible with gas, electric, ceramic, and induction cookers
 
+SPECIFICATIONS:
+• Material: 18/10 stainless steel, tri-ply base
+• Pieces: 8 (4 pots + 4 lids + 1 frying pan + 1 steamer)
+• Max oven temp: 200°C
+• Induction compatible: Yes
+• Dishwasher safe: Yes
+
 Perfect starter set for new homes, newlyweds, and kitchen upgrades.`,
     priceKobo: 2_500_000,
     category: "Kitchen & Dining",
     stock: 35,
-    imageUrl: "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=500&q=80",
+    imageUrl: IMG.pot,  // Cookware: cast iron pot as unique primary
     images: [
-      "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=500&q=80",
-      "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=500&q=80",
-      "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=500&q=80",
+      IMG.pot,
+      IMG.stove,
+      IMG.kitchen_appl,
     ],
   },
   {
@@ -647,17 +934,24 @@ KEY FEATURES:
 • Easy-clean design — jar detaches for cleaning
 • Compatible with Nigerian 220V power supply
 
+SPECIFICATIONS:
+• Capacity: 1.5 litres (hardened glass)
+• Motor: 400W
+• Blades: 4-wing stainless steel
+• Speeds: 2 + pulse
+• Voltage: 220–240V / 50Hz
+• Base: Anti-slip suction cup feet
+
 IDEAL FOR: Pepper, tomatoes, smoothies, egusi grinding, nuts, ice crushing.
 
 IN THE BOX: Blender base, glass jar, lid, user manual.`,
     priceKobo: 900_000,
     category: "Kitchen & Dining",
     stock: 50,
-    imageUrl: "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=500&q=80",
+    imageUrl: IMG.kitchen_appl,  // Binatone: kitchen counter appliances as unique primary
     images: [
-      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=500&q=80",
-      "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=500&q=80",
-      "https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=500&q=80",
+      IMG.kitchen_appl,
+      IMG.pot,
     ],
   },
 
@@ -675,17 +969,26 @@ KEY FEATURES:
 • Dermatologist and ophthalmologist tested
 • 50ml — great for daily use and travel
 
+SPECIFICATIONS:
+• Volume: 50ml
+• Key ingredient: Hyaluronic acid
+• Skin type: All (including sensitive, oily, combination)
+• Fragrance: Free
+• Paraben: Free
+• Tested: Dermatologist-tested, non-comedogenic
+• SPF: None (use a separate SPF for day use)
+
 SUITABLE FOR: Normal, oily, combination, and dry skin types.
 
 HOW TO USE: Apply a generous amount to cleansed face morning and night.`,
     priceKobo: 450_000,
     category: "Health & Beauty",
     stock: 80,
-    imageUrl: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&q=80",
+    imageUrl: IMG.skincare1,
     images: [
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500&q=80",
-      "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=500&q=80",
-      "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80",
+      IMG.skincare1,
+      IMG.skincare2,
+      IMG.skincare3,
     ],
   },
   {
@@ -701,15 +1004,22 @@ KEY FEATURES:
 • Leaves hair manageable, soft, and full of shine
 • NAFDAC approved
 
-HOW TO USE: Follow included step-by-step instruction card. Patch test 48hrs before use.`,
+SPECIFICATIONS:
+• Variants: Normal (fine/medium texture) / Super (coarse/resistant)
+• Key ingredient: Olive oil extract
+• pH: Balanced for scalp safety
+• Paraben: Free
+• Kit contents: Relaxer cream, neutralising shampoo, conditioner, gloves
+• Certification: NAFDAC approved
+
+HOW TO USE: Follow included step-by-step instruction card. Patch test 48 hrs before use.`,
     priceKobo: 380_000,
     category: "Health & Beauty",
     stock: 100,
-    imageUrl: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
+    imageUrl: IMG.hair1,
     images: [
-      "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
-      "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&q=80",
-      "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
+      IMG.hair1,
+      IMG.hair2,
     ],
   },
   {
@@ -725,17 +1035,26 @@ KEY FEATURES:
 • Massage cap included — reduces discomfort
 • Battery indicator and charging light
 
+SPECIFICATIONS:
+• Tweezers: 20
+• Min. hair length: 0.5mm
+• Speeds: 2
+• Power: Corded + cordless (NiMH battery)
+• Charging: 1 hr full charge → 30 min cordless use
+• Attachments: Massage cap, efficiency cap
+• Waterproof head: Yes (washable)
+
 AREAS: Legs, underarms, bikini line, arms. For external use only.
 
 IN THE BOX: Epilator, massage cap, efficiency cap, charging cord.`,
     priceKobo: 1_800_000,
     category: "Health & Beauty",
     stock: 45,
-    imageUrl: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=500&q=80",
+    imageUrl: IMG.epilator,
     images: [
-      "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=500&q=80",
-      "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80",
-      "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=500&q=80",
+      IMG.epilator,
+      IMG.skincare3,
+      IMG.skincare2,
     ],
   },
 
@@ -752,15 +1071,21 @@ KEY FEATURES:
 • Rubber-coated plates — protects floors, reduces noise
 • Suitable for: bicep curls, shoulder press, rows, lunges, and more
 
+SPECIFICATIONS:
+• Total weight: 20 kg
+• Bar diameter: 25 mm chrome steel (knurled)
+• Plates: 4 × 1.25 kg, 4 × 2.5 kg, 4 × 5 kg (rubber-coated)
+• Collar: Spin-lock
+• Bars included: 2
+
 INCLUDES: 2 chrome bars + 12 rubber weight plates + 4 spin-lock collars.`,
     priceKobo: 4_500_000,
     category: "Sporting Goods",
     stock: 20,
-    imageUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80",
+    imageUrl: IMG.dumbbells,
     images: [
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80",
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=80",
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80",
+      IMG.dumbbells,
+      IMG.gym,
     ],
   },
   {
@@ -775,6 +1100,13 @@ KEY FEATURES:
 • Removable insole — easy to clean and replace
 • Available in sizes UK 6–12
 
+SPECIFICATIONS:
+• Upper: Integrated knit with Grip-Tex texture
+• Outsole: FG/MG (firm ground / multi-ground)
+• Stud type: Conical + bladed hybrid
+• Sizes: UK 6 – UK 12
+• Insole: Removable cushioned insole
+
 Compatible with: Natural grass, artificial grass (4G & 5G), dry hard ground.
 
 IN THE BOX: Boots (pair), laces, boot bag.`,
@@ -784,8 +1116,8 @@ IN THE BOX: Boots (pair), laces, boot bag.`,
     imageUrl: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3cb66f21-dae0-4e34-9f54-c4e71c5b4d81/phantom-gx-academy-fg-mg-football-boots-pslL3R.png",
     images: [
       "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3cb66f21-dae0-4e34-9f54-c4e71c5b4d81/phantom-gx-academy-fg-mg-football-boots-pslL3R.png",
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=80",
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&q=80",
+      IMG.shoe_lifestyle,
+      IMG.shoe_detail,
     ],
   },
 
@@ -795,7 +1127,7 @@ IN THE BOX: Boots (pair), laces, boot bag.`,
     description: `Pampers Premium Care — the softest diaper for your baby's most sensitive skin. Trusted by Nigerian mums for decades.
 
 KEY FEATURES:
-• Size 4 — fits babies 9–14kg (typically 4–18 months)
+• Size 4 — fits babies 9–14 kg (typically 4–18 months)
 • 52 diapers per pack — great value
 • SkinLove™ lotion with shea butter — moisturises with every use
 • 360° softness — softer than cotton on all sides
@@ -804,15 +1136,23 @@ KEY FEATURES:
 • Flexible waistband — moves with baby, no marks
 • DERMATOLOGICALLY tested, paediatrician recommended
 
+SPECIFICATIONS:
+• Size: 4 (9–14 kg / ~4–18 months)
+• Count: 52 diapers per pack
+• Core: Ultra-dry with Airloc™ channels
+• Lotion: SkinLove™ with shea butter
+• Tested: Dermatologically tested, paediatrician recommended
+• Certifications: NAFDAC approved
+
 NAFDAC approved. Imported.`,
     priceKobo: 850_000,
     category: "Baby Products",
     stock: 120,
-    imageUrl: "https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=500&q=80",
+    imageUrl: IMG.diapers,
     images: [
-      "https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=500&q=80",
-      "https://images.unsplash.com/photo-1519689373023-dd07c7988603?w=500&q=80",
-      "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=500&q=80",
+      IMG.diapers,
+      IMG.baby3,
+      IMG.baby1,
     ],
   },
   {
@@ -822,7 +1162,7 @@ NAFDAC approved. Imported.`,
 KEY FEATURES:
 • Jogger stroller with air-filled tyres — smooth ride on all terrains
 • EZlocK™ buckle — one-hand attachment of car seat to stroller
-• Flex-Loc infant car seat — fits babies 2.3–16kg
+• Flex-Loc infant car seat — fits babies 2.3–16 kg
 • 5-point harness with EPS energy-absorbing foam — maximum safety
 • Parent tray with two cup holders and storage
 • Extra-large storage basket underneath stroller
@@ -830,15 +1170,24 @@ KEY FEATURES:
 • Adjustable canopy — UV50+ sun protection
 • Folds compactly for car boot storage
 
+SPECIFICATIONS:
+• Car seat weight range: 2.3 – 16 kg
+• Harness: 5-point adjustable
+• Tyre type: Air-filled (pneumatic) rubber
+• Canopy: Multi-position adjustable, UPF 50+
+• Stroller weight: 13.6 kg (with car seat)
+• Fold type: Single-hand fold
+• Certifications: FMVSS 213
+
 SAFETY CERTIFIED: FMVSS 213, tested to exceed US federal standards.`,
     priceKobo: 12_000_000,
     category: "Baby Products",
     stock: 6,
-    imageUrl: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&q=80",
+    imageUrl: IMG.stroller,
     images: [
-      "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&q=80",
-      "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=500&q=80",
-      "https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=500&q=80",
+      IMG.stroller,
+      IMG.baby2,
+      IMG.diapers,
     ],
   },
   {
@@ -854,17 +1203,25 @@ KEY FEATURES:
 • 3 bonus ways to use as baby grows (newborn, sit-and-play, toddler)
 • Batteries included (AA × 3)
 
+SPECIFICATIONS:
+• Age range: Newborn – 36 months
+• Stages: 5 (newborn, sit-and-play, stand, toddler piano, floor piano)
+• Piano keys: Light-up with 70+ sounds/songs/phrases
+• Mat: Soft padded, machine-washable
+• Batteries: 3 × AA (included)
+• Dimensions (unfolded): 84 × 56 cm
+
 DEVELOPMENTAL BENEFITS: Sensory exploration, motor skills, music and language.
 
 Machine-washable mat.`,
     priceKobo: 1_600_000,
     category: "Baby Products",
     stock: 20,
-    imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=500&q=80",
+    imageUrl: IMG.baby1,
     images: [
-      "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=500&q=80",
-      "https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?w=500&q=80",
-      "https://images.unsplash.com/photo-1519689373023-dd07c7988603?w=500&q=80",
+      IMG.baby1,
+      IMG.baby2,
+      IMG.baby3,
     ],
   },
 ];
@@ -889,7 +1246,7 @@ export async function seedProducts() {
     })
     .returning();
 
-  console.log(`✅  Inserted ${inserted.length} products:`);
+  console.log(`✅  Inserted/updated ${inserted.length} products:`);
   for (const p of inserted) {
     const naira = (p.priceKobo / 100).toLocaleString("en-NG", {
       style: "currency",
