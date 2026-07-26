@@ -10,7 +10,7 @@ Tested via the image proxy at `GET /api/image-proxy?url=<encoded>` — must retu
 
 **Rule:** Never guess Unsplash IDs. Only use IDs from this confirmed list, or test before committing. Always visually verify what the image shows before assigning it.
 
-## Confirmed-Working IDs (as of 2026-07-25)
+## Confirmed-Working IDs (as of 2026-07-26)
 
 ### Appliances / Home
 - `1626806819282-2c1dc01a5e0c` — washing machine (front-load, white)
@@ -80,6 +80,13 @@ The `d_transparent.gif` segment causes the CDN to return a blank transparent gif
 - `https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg` — angle view
 - `https://firmanpowerequipment.com/cdn/shop/files/W03082_Included_900x900.jpg` — in-box view
 
+## Nike CDN (static.nike.com) — test results as of 2026-07-26
+- AF1 top `b7d9211c-...` → 200 ✓ (in use for Nike AF1 primary)
+- AF1 side `3fefc6c5-...` → 404 ✗ (removed from seed)
+- AF1 sole `772da609-...` → 404 ✗ (removed from seed)
+- Phantom GX `3cb66f21-...` → 404 ✗ (removed; football boots falls back to Unsplash)
+**Warning:** Nike CDN image UUIDs can go stale without notice. Always verify before adding.
+
 ## Image Proxy Allowlist (working external hosts)
 - `images.unsplash.com` ✅
 - `www.danby.com` ✅
@@ -97,8 +104,8 @@ The `d_transparent.gif` segment causes the CDN to return a blank transparent gif
 - `1556742049-0cfed4f6a45d` → 200 (unknown subject)
 - `1571019614242-c5c5dee9f50b` → 200 (likely gym/fitness adjacent — near 1571019613454)
 - `1604671368394-2240d0b1bb6c` → 200 (unknown subject)
-- `1542291026-7eec264c27ff` → 200 (likely sneaker/shoe lifestyle — used for Nike supplemental)
-- `1491553895911-0055eca6402d` → 200 (likely shoe detail — used for Nike/football boot supplemental)
+- `1542291026-7eec264c27ff` → 200 (likely sneaker/shoe lifestyle — used for Nike AF1 supplemental)
+- `1491553895911-0055eca6402d` → 200 (likely shoe detail — used for Nike AF1 / football boots supplemental)
 - `1597350584914-55bb62285896` → 200 (unknown subject)
 - `1611532736597-de2d4265fba3` → 200 (unknown subject)
 - `1543163521-1bf539c55dd2` → 200 (unknown subject)

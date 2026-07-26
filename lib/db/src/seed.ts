@@ -134,17 +134,14 @@ const LOGITECH = {
 };
 
 // Nike — static.nike.com is in allowlist
-// Air Force 1 '07 White (CW2288-111): confirmed 3-angle gallery
+// Air Force 1 '07 White (CW2288-111)
+// Tested 2026-07-26: top (b7d9211c) = 200 ✓ | side (3fefc6c5) = 404 ✗ | sole (772da609) = 404 ✗
+// Only the top-view UUID is currently live — side/sole variants removed to prevent broken gallery images
 const NIKE_AF1 = {
-  top:  "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",
-  side: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3fefc6c5-e8b6-4f3d-b2af-e287a6b475cb/air-force-1-07-mens-shoes-jBrhbr.png",
-  sole: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/772da609-c608-4728-b7db-a6fafca0f23d/air-force-1-07-mens-shoes-jBrhbr.png",
+  top: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",
 };
-
-// Phantom GX Academy FG/MG: confirmed primary
-const NIKE_PGX = {
-  main: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3cb66f21-dae0-4e34-9f54-c4e71c5b4d81/phantom-gx-academy-fg-mg-football-boots-pslL3R.png",
-};
+// NOTE: Phantom GX main UUID (3cb66f21) tested 404 on 2026-07-26 — no confirmed Nike CDN URL.
+// Football boots product falls back to confirmed Unsplash shoe images.
 
 // techmall CDN — confirmed in allowlist (techmall-images-repo.s3.eu-west-2.amazonaws.com)
 const TECHMALL = {
@@ -258,12 +255,11 @@ IN THE BOX: Washing machine, inlet hose, drain hose, user manual, warranty card.
     priceKobo: 5_000_000,
     category: "Home & Office",
     stock: 18,
-    // Primary: front-load washing machine (confirmed Unsplash) — unique in category ✓
+    // Primary: washing machine (confirmed Unsplash) — unique in category ✓
+    // Note: only 1 confirmed washing-machine Unsplash ID available — no padding with unrelated images
     imageUrl: IMG.washer,
     images: [
-      IMG.washer,     // primary: white front-load washing machine
-      IMG.fridge,     // supplemental: large home appliance context
-      IMG.mattress2,  // supplemental: home interior / laundry room context
+      IMG.washer,    // primary: white washing machine — product shot
     ],
   },
 
@@ -536,7 +532,7 @@ IN THE BOX: Phone, 25W charger, USB-C cable, SIM tool.`,
 
   {
     name: "Infinix Hot 50 Pro — 256GB Stellar Black",
-    description: `The Infinix Hot 50 Pro gives you more storage, more speed, and a bigger battery — all under ₦100,000.
+    description: `The Infinix Hot 50 Pro gives you more storage, more speed, and a bigger battery — all under ₦100,000. Available in Stellar Black — a deep, premium finish that stands out.
 
 KEY FEATURES:
 • 6.78-inch AMOLED display — 120Hz smooth scrolling
@@ -553,6 +549,7 @@ SPECIFICATIONS:
 • Processor: MediaTek Helio G100
 • RAM: 8GB
 • Storage: 256GB (expandable)
+• Colour: Stellar Black
 • Rear cameras: 108MP main + 2MP depth + AI lens
 • Front camera: 16MP dual flash
 • Battery: 5000mAh + 45W fast charge
@@ -810,11 +807,10 @@ Handcrafted in Lagos.`,
     category: "Fashion",
     stock: 50,
     // Primary: African wrap dress Ankara print — unique in category ✓
+    // FIXED: removed polo2/polo3 (polo shirt images — wrong product class entirely)
     imageUrl: IMG.ankara,
     images: [
       IMG.ankara,   // African wrap dress — bold print primary
-      IMG.polo3,    // clothing rail — fashion context supplemental
-      IMG.polo2,    // folded fabric — textile/colour context
     ],
   },
 
@@ -846,11 +842,10 @@ IN THE BOX: Shoes (pair), extra laces, shoe bag.`,
     category: "Fashion",
     stock: 30,
     // Primary: Nike CDN top/front view — unique in category ✓
+    // FIXED: removed NIKE_AF1.side and NIKE_AF1.sole — both tested 404 on 2026-07-26
     imageUrl: NIKE_AF1.top,
     images: [
-      NIKE_AF1.top,      // top/front view — official Nike product shot
-      NIKE_AF1.side,     // side profile — swoosh detail
-      NIKE_AF1.sole,     // outsole / pivot circle pattern
+      NIKE_AF1.top,      // top/front view — only confirmed-working Nike CDN angle
       IMG.shoe_life,     // sneaker lifestyle — foot in context (confirmed 200)
       IMG.shoe_detail,   // shoe close-up — texture/material detail (confirmed 200)
     ],
@@ -887,12 +882,10 @@ Handcrafted. Each bag is uniquely yours.`,
     category: "Fashion",
     stock: 25,
     // Primary: structured leather tote — unique in category ✓
-    // FIXED: removed shoe_lifestyle (wrong product class) — replaced with fashion context
+    // FIXED: removed polo2/polo3 (polo shirt images — completely wrong product class for a leather bag)
     imageUrl: IMG.bag,
     images: [
       IMG.bag,     // structured leather tote — bag product primary
-      IMG.polo2,   // folded textile — fabric/material context supplemental
-      IMG.polo3,   // fashion rail — accessories lifestyle context
     ],
   },
 
@@ -1036,6 +1029,7 @@ IN THE BOX: Cooker, grill pan, 2 oven trays, LPG hose, user manual.`,
     images: [
       IMG.stove,    // gas stove in use — cooker primary
       IMG.pot,      // cast iron pot on hob — cooking context
+      IMG.kitchen,  // kitchen counter with appliances — cooking environment
     ],
   },
 
@@ -1105,11 +1099,11 @@ IN THE BOX: Blender base, glass jar, lid, user manual.`,
     category: "Kitchen & Dining",
     stock: 50,
     // Primary: kitchen counter with counter appliances — unique in category ✓
-    // FIXED: replaced pot (wrong — blenders aren't pots) with kitchen counter context
+    // FIXED: replaced pot (wrong — blenders aren't pots) with gas stove cooking context
     imageUrl: IMG.kitchen,
     images: [
       IMG.kitchen,   // kitchen counter appliances — blender product context primary
-      IMG.pot,       // kitchen equipment — cooking context supplemental
+      IMG.stove,     // kitchen in use — cooking appliance context
     ],
   },
 
@@ -1290,14 +1284,13 @@ IN THE BOX: Boots (pair), laces, boot bag.`,
     priceKobo: 5_500_000,
     category: "Sporting Goods",
     stock: 25,
-    // Primary: Nike CDN boot product shot — unique in category (Dumbbells uses dumbbells) ✓
-    // FIXED: replaced generic shoe_lifestyle/shoe_detail (fashion crossover) with sport context
-    imageUrl: NIKE_PGX.main,
+    // Primary: shoe_detail — confirmed Unsplash (Nike PGX CDN URL tested 404 on 2026-07-26)
+    // Unique primary in Sporting Goods ✓ (Dumbbells uses IMG.dumbbells)
+    imageUrl: IMG.shoe_detail,
     images: [
-      NIKE_PGX.main,      // official Nike Phantom GX product shot — primary
-      IMG.shoe_detail,    // boot / footwear close-up — stud/sole detail
-      IMG.gym1,           // athletic / sports training context
+      IMG.shoe_detail,    // boot / footwear close-up — stud/sole/material detail (primary)
       IMG.shoe_life,      // footwear lifestyle — on-pitch context
+      IMG.gym1,           // athletic / sports training context
     ],
   },
 
@@ -1411,12 +1404,12 @@ Machine-washable mat.`,
     stock: 20,
     // Primary: baby play items / toys — unique in category ✓
     // (Pampers=diapers, Stroller=stroller, Fisher-Price=baby_play)
+    // FIXED: removed diapers image — diaper shot is wrong product class for a play gym
     imageUrl: IMG.baby_play,
     images: [
       IMG.baby_play,   // baby play mat / toys — play gym primary
       IMG.baby3,       // baby close-up — infant engagement context
       IMG.baby_life,   // baby with parent — play & bonding context
-      IMG.diapers,     // baby items — infant lifestyle supplemental
     ],
   },
 ];
