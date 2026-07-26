@@ -41,6 +41,12 @@ description: Online store monorepo — key design decisions, env vars, and route
 - Additional origins can be added via FRONTEND_URL env var (comma-separated)
 - Always uses the allowedOrigins array (not `origin: true`); add new domains to the array
 
+## Image rendering rules
+- Always use `proxyImage()` for ALL product images at render time — including Cart, Checkout, ProductDetail thumbnails/related products, and Catalog grids. Never render raw `imageUrl` directly.
+- Use `<NoImage>` component (`artifacts/store/src/components/ui/no-image.tsx`) when images fail to load (onError) or when no URL exists. Never use `display:none` as the sole error handler.
+- Add `loading="lazy"` to all product `<img>` tags.
+- Fallback pattern: `<img onError={...} />` followed immediately by `<div hidden className="absolute inset-0"><NoImage /></div>`. Requires `relative` + `overflow-hidden` on the container.
+
 ## Image proxy (artifacts/store/src/lib/imageProxy.ts)
 - `proxyImage()` routes external image URLs through `/api/image-proxy`
 - In production, uses `VITE_API_BASE_URL` (absolute) instead of relative `/api` — critical because Vercel frontend and Railway API are on different domains

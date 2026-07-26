@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, ShoppingCart, Package, Plus, Minus, Star, Truck, ShieldCheck, ZoomIn, RotateCcw, Clock } from "lucide-react";
+import { NoImage } from "@/components/ui/no-image";
 import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
 import { proxyImage } from "@/lib/imageProxy";
 import React from "react";
@@ -155,7 +156,7 @@ export default function ProductDetail() {
                   <button
                     key={idx}
                     onClick={() => setSelectedImageIdx(idx)}
-                    className={`w-[68px] h-[68px] rounded-xl overflow-hidden border-2 bg-white transition-all duration-200 flex items-center justify-center ${
+                    className={`relative w-[68px] h-[68px] rounded-xl overflow-hidden border-2 bg-white transition-all duration-200 flex items-center justify-center ${
                       selectedImageIdx === idx
                         ? "border-[#F68B1E] shadow-sm ring-4 ring-[#F68B1E]/10"
                         : "border-gray-100 hover:border-[#F68B1E]/50"
@@ -165,8 +166,15 @@ export default function ProductDetail() {
                     <img
                       src={proxyImage(img)}
                       alt={`Thumbnail ${idx + 1}`}
+                      loading="lazy"
                       className="w-full h-full object-contain mix-blend-multiply p-1"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        if (fb) fb.hidden = false;
+                      }}
                     />
+                    <div hidden className="absolute inset-0"><NoImage iconSize={20} label="" /></div>
                   </button>
                 ))}
               </div>
@@ -188,8 +196,17 @@ export default function ProductDetail() {
                     key={mainImage}
                     src={proxyImage(mainImage) ?? ""}
                     alt={`${product.name} — view ${selectedImageIdx + 1}`}
+                    loading="lazy"
                     className="w-full h-full object-contain mix-blend-multiply p-6 transition-transform duration-500 ease-out group-hover:scale-105"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const fb = document.getElementById("main-img-fallback");
+                      if (fb) fb.hidden = false;
+                    }}
                   />
+                  <div id="main-img-fallback" hidden className="absolute inset-0">
+                    <NoImage iconSize={48} label="Image not available" />
+                  </div>
 
                   {/* Zoom overlay on hover */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -206,9 +223,7 @@ export default function ProductDetail() {
                   </div>
                 </>
               ) : (
-                <div className="w-full aspect-square flex flex-col items-center justify-center text-gray-300">
-                  <Package className="w-24 h-24 mb-4 opacity-50" />
-                </div>
+                <NoImage iconSize={64} label="No Image Available" />
               )}
             </div>
           </div>
@@ -343,13 +358,24 @@ export default function ProductDetail() {
                     <div className="absolute top-2 right-2 bg-red-100 text-[#E53935] text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
                       -{rpDiscount}%
                     </div>
-                    <div className="aspect-square relative mb-2">
+                    <div className="aspect-square relative mb-2 overflow-hidden rounded">
                       {rpImg ? (
-                        <img src={proxyImage(rpImg)} alt={rp.name} className="w-full h-full object-cover rounded mix-blend-multiply" />
+                        <>
+                          <img
+                            src={proxyImage(rpImg)}
+                            alt={rp.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover mix-blend-multiply"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
+                              if (fb) fb.hidden = false;
+                            }}
+                          />
+                          <div hidden className="absolute inset-0"><NoImage iconSize={24} label="" /></div>
+                        </>
                       ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 rounded">
-                          <Package className="w-8 h-8 opacity-50" />
-                        </div>
+                        <NoImage iconSize={24} label="" />
                       )}
                     </div>
                     <div className="flex flex-col flex-1">

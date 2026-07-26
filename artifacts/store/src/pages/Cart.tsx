@@ -1,6 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
+import { proxyImage } from "@/lib/imageProxy";
+import { NoImage } from "@/components/ui/no-image";
 import { Trash2, Minus, Plus, ShoppingCart, ShieldCheck } from "lucide-react";
 import { getOriginalPrice } from "@/lib/jumia-mock";
 
@@ -42,12 +44,22 @@ export default function Cart() {
               return (
                 <div key={item.productId} className="p-4 flex flex-col sm:flex-row gap-4">
                   <div className="flex gap-4 flex-1">
-                    <Link href={`/products/${item.productId}`} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-gray-50 rounded border border-gray-100 flex items-center justify-center">
+                    <Link href={`/products/${item.productId}`} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-gray-50 rounded border border-gray-100 flex items-center justify-center overflow-hidden">
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-contain mix-blend-multiply p-1" />
-                      ) : (
-                        <ShoppingCart className="w-8 h-8 text-gray-300" />
-                      )}
+                        <img
+                          src={proxyImage(item.imageUrl)}
+                          alt={item.productName}
+                          loading="lazy"
+                          className="w-full h-full object-contain mix-blend-multiply p-1"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.nextElementSibling?.removeAttribute("hidden");
+                          }}
+                        />
+                      ) : null}
+                      <div hidden={!!item.imageUrl} className="w-full h-full">
+                        <NoImage iconSize={24} label="" />
+                      </div>
                     </Link>
                     
                     <div className="flex flex-col flex-1">

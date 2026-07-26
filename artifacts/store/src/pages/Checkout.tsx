@@ -6,6 +6,8 @@ import { useInitiateCheckout } from "@workspace/api-client-react";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
 import { ChevronRight, CheckCircle2, Lock, ShoppingCart, MapPin, Phone } from "lucide-react";
+import { proxyImage } from "@/lib/imageProxy";
+import { NoImage } from "@/components/ui/no-image";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
@@ -209,10 +211,22 @@ export default function Checkout() {
           <div className="space-y-3 mb-4 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
             {items.map((item) => (
               <div key={item.productId} className="flex gap-3">
-                <div className="w-12 h-12 bg-gray-50 rounded border border-gray-100 shrink-0 flex items-center justify-center relative">
-                  {item.imageUrl
-                    ? <img src={item.imageUrl} alt={item.productName} className="w-10 h-10 object-contain mix-blend-multiply" />
-                    : <ShoppingCart className="w-6 h-6 text-gray-300" />}
+                <div className="w-12 h-12 bg-gray-50 rounded border border-gray-100 shrink-0 flex items-center justify-center relative overflow-hidden">
+                  {item.imageUrl ? (
+                    <img
+                      src={proxyImage(item.imageUrl)}
+                      alt={item.productName}
+                      loading="lazy"
+                      className="w-10 h-10 object-contain mix-blend-multiply"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.nextElementSibling?.removeAttribute("hidden");
+                      }}
+                    />
+                  ) : null}
+                  <div hidden={!!item.imageUrl} className="w-full h-full">
+                    <NoImage iconSize={16} label="" />
+                  </div>
                   <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#F68B1E] text-white text-[10px] font-bold rounded-full flex items-center justify-center">{item.quantity}</div>
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">

@@ -70,6 +70,11 @@ Tested via the image proxy at `GET /api/image-proxy?url=<encoded>` — must retu
 - `1519689680058-324335c77eba` — baby items
 - `1515488042361-ee00e0ddd4e4` — baby stroller
 
+## Logitech CDN (resource.logitech.com)
+URLs must NOT include the `d_transparent.gif` fallback segment. Use this format:
+`https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/<filename>.png`
+The `d_transparent.gif` segment causes the CDN to return a blank transparent gif instead of the product image.
+
 ## Generator images (Firman CDN — confirmed 200 through proxy)
 - `https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png` — front view
 - `https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg` — angle view

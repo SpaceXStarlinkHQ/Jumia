@@ -6,6 +6,7 @@ import {
   ShoppingCart, ChevronRight, Star, Truck, Shield,
   HeadphonesIcon, RotateCcw, Package, Flame, Tag, Zap,
 } from "lucide-react";
+import { NoImage } from "@/components/ui/no-image";
 import { useCart } from "@/lib/cart";
 import { useToast } from "@/hooks/use-toast";
 import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/jumia-mock";
@@ -170,8 +171,9 @@ export default function Catalog() {
               {/* Floating product image */}
               <div className="absolute right-4 md:right-8 bottom-0 hidden md:block">
                 <img
-                  src="https://firmanpowerequipment.com/cdn/shop/products/P03601_200_900x900.png?v=1630521314"
+                  src={proxyImage("https://firmanpowerequipment.com/cdn/shop/products/P03601_200_900x900.png?v=1630521314")}
                   alt=""
+                  loading="lazy"
                   className="h-52 object-contain drop-shadow-2xl animate-float"
                   style={{ filter: "drop-shadow(0 16px 32px rgba(240,90,40,0.4))" }}
                 />
@@ -292,13 +294,24 @@ export default function Catalog() {
                           {badge}
                         </div>
 
-                        <div className="aspect-square mb-2 rounded-xl overflow-hidden bg-gray-50">
+                        <div className="aspect-square mb-2 rounded-xl overflow-hidden bg-gray-50 relative">
                           {img ? (
-                            <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-400" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            <>
+                              <img
+                                src={proxyImage(img)}
+                                alt={product.name}
+                                loading="lazy"
+                                className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-400"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                  const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
+                                  if (fb) fb.hidden = false;
+                                }}
+                              />
+                              <div hidden className="absolute inset-0"><NoImage /></div>
+                            </>
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                              <Package className="w-8 h-8 opacity-50" />
-                            </div>
+                            <NoImage />
                           )}
                         </div>
                         <p className="text-[11px] text-gray-700 line-clamp-2 leading-snug mb-1.5 group-hover:text-[#F05A28] transition-colors font-medium">
@@ -388,13 +401,24 @@ export default function Catalog() {
                   </div>
 
                   <Link href={`/products/${product.id}`} className="flex flex-col flex-1">
-                    <div className="aspect-square mb-3 rounded-xl overflow-hidden bg-gray-50">
+                    <div className="aspect-square mb-3 rounded-xl overflow-hidden bg-gray-50 relative">
                       {img ? (
-                        <img src={proxyImage(img)} alt={product.name} className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <>
+                          <img
+                            src={proxyImage(img)}
+                            alt={product.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
+                              if (fb) fb.hidden = false;
+                            }}
+                          />
+                          <div hidden className="absolute inset-0"><NoImage /></div>
+                        </>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <Package className="w-8 h-8 opacity-50" />
-                        </div>
+                        <NoImage />
                       )}
                     </div>
                     <p className="text-[12px] text-gray-700 line-clamp-2 leading-snug mb-2 flex-1 group-hover:text-[#F05A28] transition-colors font-medium">
