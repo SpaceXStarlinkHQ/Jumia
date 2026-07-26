@@ -176,6 +176,15 @@ export default function ProductDetail() {
       ? [product.imageUrl]
       : [];
 
+  // Run product consistency validation — shown as a dismissible warning banner
+  const consistency = isProductConsistent({
+    name: product.name,
+    imageUrl: product.imageUrl,
+    images: allImages,
+    description: product.description,
+    priceKobo: product.priceKobo,
+  });
+
   const mainImage = allImages[selectedImageIdx] ?? null;
 
   const handleAddToCart = () => {
@@ -202,6 +211,17 @@ export default function ProductDetail() {
 
   return (
     <div className="pb-10">
+      {/* Product data consistency warning — shown only when validation issues are found */}
+      {!consistency.ok && (
+        <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 flex items-start gap-2.5 text-sm text-amber-800">
+          <span className="shrink-0 mt-0.5">⚠️</span>
+          <div>
+            <span className="font-semibold">Product data notice: </span>
+            {consistency.warnings.join(" · ")}
+          </div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className="flex items-center text-xs text-gray-500 mb-4 gap-1.5 min-w-0">
         <Link href="/" className="hover:text-gray-800 shrink-0">Home</Link>

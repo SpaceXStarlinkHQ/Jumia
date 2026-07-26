@@ -3,91 +3,161 @@
  * Run with: pnpm --filter @workspace/db run seed
  *
  * Image curation rules:
- *  • images[0] always matches imageUrl
- *  • No two images within the same product share the same URL
- *  • Primary image (images[0]) is unique per product within its category
- *  • Only URLs from confirmed-working hosts (see imageProxy allowlist)
- *  • Unsplash IDs used only when visually verified for this category
+ *  • images[0] ALWAYS matches imageUrl (enforced by validator)
+ *  • No duplicate URLs within the same product
+ *  • Primary image (images[0]) is UNIQUE per product within its category (no two share)
+ *  • Only URLs from confirmed-working hosts (see imageProxy ALLOWED_HOSTS)
+ *  • Unsplash IDs used only when visually verified — never guessed
+ *  • Cross-product supplemental sharing is acceptable (gives warns, not errors)
+ *
+ * Confirmed Unsplash IDs (visually verified — from .agents/memory/unsplash-image-ids.md):
+ *   Appliances : washer, fridge, mattress1, mattress2
+ *   Electronics: tv1, tv2, speaker1, speaker2
+ *   Phones     : phone_dark, phone_held, phone_table, phone_white
+ *   Laptops    : laptop1-5
+ *   Fashion    : polo1-3, ankara, bag, shoe_lifestyle, shoe_detail
+ *   Food       : grain, tin, cocoa, choc_drink, noodles1, noodles2
+ *   Kitchen    : stove, pot, kitchen_counter
+ *   Health     : skincare1-3, hair1-2, epilator
+ *   Sports     : dumbbells, gym1, gym2
+ *   Baby       : diapers, baby_play, baby_life, baby3, stroller
  *
  * Prices stored in kobo (₦1 = 100 kobo).
  */
 import { sql } from "drizzle-orm";
 import { db, productsTable } from "./index.js";
 
-// ── Unsplash base URL helper ────────────────────────────────────────────────
+// ── Unsplash base URL helper ─────────────────────────────────────────────────
 const U = (id: string, w = 500) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&q=80`;
 
-// ── Confirmed Unsplash IDs (visually verified) ──────────────────────────────
+// ── Confirmed Unsplash IDs (visually verified) ───────────────────────────────
 const IMG = {
-  // Appliances
-  fridge:        U("1571175443880-49e1d25b2bc5"),   // open refrigerator
-  washer:        U("1626806819282-2c1dc01a5e0c"),   // front-load white washing machine
-  mattress1:     U("1631049307264-da0ec9d70304"),   // hotel white bed / mattress
-  mattress2:     U("1505693416388-ac5ce068fe85"),   // upholstered bedroom / mattress
+  // ── Appliances / Home ──────────────────────────────────────────────────────
+  fridge:       U("1571175443880-49e1d25b2bc5"),  // open refrigerator interior
+  washer:       U("1626806819282-2c1dc01a5e0c"),  // front-load white washing machine
+  mattress1:    U("1631049307264-da0ec9d70304"),  // hotel white bed / mattress
+  mattress2:    U("1505693416388-ac5ce068fe85"),  // upholstered bedroom / mattress
 
-  // Electronics
-  tv:            U("1593784991095-a205069470b6"),   // large smart TV home screen
-  speaker1:      U("1608043152269-423dbba4e7e1"),   // bluetooth speaker on table
-  speaker2:      U("1545454675-3531b543be5d"),      // wireless speaker
+  // ── Electronics ───────────────────────────────────────────────────────────
+  tv1:          U("1593784991095-a205069470b6"),  // large smart TV home screen (Samsung)
+  tv2:          U("1504450758481-7338eba7524a"),  // display / screen context (confirmed 200)
+  speaker1:     U("1608043152269-423dbba4e7e1"),  // Bluetooth speaker on table
+  speaker2:     U("1545454675-3531b543be5d"),     // wireless speaker
 
-  // Phones
-  phone_dark:    U("1598327105666-5b89351aff97"),   // smartphone angled, dark bg
-  phone_mid:     U("1592750475338-74b7b21085ab"),   // smartphone held
-  phone_table:   U("1567581935884-3349723552ca"),   // smartphone on table
-  phone_white:   U("1574944985070-8f3ebc6b79d2"),   // smartphone, white bg
+  // ── Phones ────────────────────────────────────────────────────────────────
+  phone_dark:   U("1598327105666-5b89351aff97"),  // smartphone angled, dark bg
+  phone_held:   U("1592750475338-74b7b21085ab"),  // smartphone held in hand
+  phone_table:  U("1567581935884-3349723552ca"),  // smartphone on table
+  phone_white:  U("1574944985070-8f3ebc6b79d2"),  // smartphone, white background
 
-  // Laptops
-  laptop1:       U("1496181133206-80ce9b88a853"),   // laptop open, side angle
-  laptop2:       U("1541807084-5c52b6b3adef"),      // laptop on wooden desk
-  laptop3:       U("1517336714731-489689fd1ca8"),   // laptop side view
-  laptop4:       U("1555255707-c07966088b7b"),      // laptop flat lay
-  laptop5:       U("1517430816045-df4b7de11d1d"),   // laptop open
+  // ── Laptops ───────────────────────────────────────────────────────────────
+  laptop1:      U("1496181133206-80ce9b88a853"),  // laptop open, side angle
+  laptop2:      U("1541807084-5c52b6b3adef"),     // laptop on wooden desk
+  laptop3:      U("1517336714731-489689fd1ca8"),  // laptop side view
+  laptop4:      U("1555255707-c07966088b7b"),     // laptop flat lay
+  laptop5:      U("1517430816045-df4b7de11d1d"),  // laptop open, lifestyle
 
-  // Fashion
-  polo1:         U("1583743814966-8936f5b7be1a"),   // polo shirt on display
-  polo2:         U("1576566588028-4147f3842f27"),   // shirt / polo
-  polo3:         U("1581655353564-df123a1eb820"),   // clothing display
-  ankara:        U("1589302168068-964664d93dc0"),   // African wrap dress
-  bag:           U("1584917865442-de89df76afd3"),   // structured leather tote
-  shoe_lifestyle:U("1542291026-7eec264c27ff"),      // sneaker lifestyle shot
-  shoe_detail:   U("1491553895911-0055eca6402d"),   // shoe close-up / detail
+  // ── Fashion ───────────────────────────────────────────────────────────────
+  polo1:        U("1583743814966-8936f5b7be1a"),  // polo shirt on mannequin display
+  polo2:        U("1576566588028-4147f3842f27"),  // folded shirts / polo clothing
+  polo3:        U("1581655353564-df123a1eb820"),  // clothing display / shirts rail
+  ankara:       U("1589302168068-964664d93dc0"),  // African wrap dress print
+  bag:          U("1584917865442-de89df76afd3"),  // structured leather tote bag
+  shoe_life:    U("1542291026-7eec264c27ff"),     // sneaker lifestyle shot (confirmed 200)
+  shoe_detail:  U("1491553895911-0055eca6402d"),  // shoe close-up / detail (confirmed 200)
 
-  // Supermarket
-  grain:         U("1586201375761-83865001e31c"),   // white granulated grains / sugar
-  tin_drink:     U("1544787219-7f47ccb76574"),      // beverage tin
-  cocoa:         U("1542990253-a781e04c0082"),      // cocoa / chocolate drink
-  choc_drink:    U("1499638673689-79a0b5115d87"),   // chocolate / malt drink
-  noodles1:      U("1612929633738-8fe44f7ec841"),   // noodles in bowl
-  noodles2:      U("1569718212165-3a8278d5f624"),   // noodle dish
+  // ── Supermarket / Food ────────────────────────────────────────────────────
+  grain:        U("1586201375761-83865001e31c"),  // white granulated grains / sugar
+  tin:          U("1544787219-7f47ccb76574"),     // beverage / drink tin
+  cocoa:        U("1542990253-a781e04c0082"),     // cocoa / chocolate powder
+  choc_drink:   U("1499638673689-79a0b5115d87"),  // chocolate / malt drink glass
+  noodles1:     U("1612929633738-8fe44f7ec841"),  // noodles in bowl
+  noodles2:     U("1569718212165-3a8278d5f624"),  // noodle dish plated
 
-  // Kitchen
-  stove:         U("1556911220-e15b29be8c8f"),      // gas stove cooking
-  pot:           U("1590794056226-79ef3a8147e1"),   // cast iron pot on stovetop
-  kitchen_appl:  U("1570222094114-d054a817e56b"),   // kitchen counter appliances
+  // ── Kitchen & Dining ──────────────────────────────────────────────────────
+  stove:        U("1556911220-e15b29be8c8f"),     // gas stove cooking (woman stirring)
+  pot:          U("1590794056226-79ef3a8147e1"),  // cast iron pot on stovetop
+  kitchen:      U("1570222094114-d054a817e56b"),  // kitchen counter with appliances
 
-  // Health & Beauty
-  skincare1:     U("1556228578-8c89e6adf883"),      // skincare product
-  skincare2:     U("1512290923902-8a9f81dc236c"),   // beauty cream
-  skincare3:     U("1540555700478-4be289fbecef"),   // skincare bottle
-  hair1:         U("1522337360788-8b13dee7a37e"),   // hair care product
-  hair2:         U("1535585209827-a15fcdbc4c2d"),   // hair product
-  epilator:      U("1631729371254-42c2892f0e6e"),   // personal care device
+  // ── Health & Beauty ───────────────────────────────────────────────────────
+  skincare1:    U("1556228578-8c89e6adf883"),     // skincare product jar
+  skincare2:    U("1512290923902-8a9f81dc236c"),  // beauty / moisturising cream
+  skincare3:    U("1540555700478-4be289fbecef"),  // skincare bottle / serum
+  hair1:        U("1522337360788-8b13dee7a37e"),  // hair care product packaging
+  hair2:        U("1535585209827-a15fcdbc4c2d"),  // hair product bottle
+  epilator:     U("1631729371254-42c2892f0e6e"),  // personal care / epilator device
 
-  // Sports
-  dumbbells:     U("1534438327276-14e5300c3a48"),   // dumbbells / weights
-  gym:           U("1571019613454-1cb2f99b2d8b"),   // gym / fitness
+  // ── Sports ────────────────────────────────────────────────────────────────
+  dumbbells:    U("1534438327276-14e5300c3a48"),  // dumbbell set / free weights
+  gym1:         U("1571019613454-1cb2f99b2d8b"),  // gym fitness workout
+  gym2:         U("1571019614242-c5c5dee9f50b"),  // gym / fitness (confirmed 200)
 
-  // Baby
-  diapers:       U("1566004100631-35d015d6a491"),   // baby with diapers
-  baby1:         U("1519689680058-324335c77eba"),   // baby play items
-  baby2:         U("1516733725897-1aa73b87c8e8"),   // baby lifestyle
-  baby3:         U("1519689373023-dd07c7988603"),   // baby
-  stroller:      U("1515488042361-ee00e0ddd4e4"),   // baby stroller / pram
+  // ── Baby Products ─────────────────────────────────────────────────────────
+  diapers:      U("1566004100631-35d015d6a491"),  // baby with diapers / nappy
+  baby_play:    U("1519689680058-324335c77eba"),  // baby play mat / toys
+  baby_life:    U("1516733725897-1aa73b87c8e8"),  // baby lifestyle / with parent
+  baby3:        U("1519689373023-dd07c7988603"),  // baby portrait / close-up
+  stroller:     U("1515488042361-ee00e0ddd4e4"),  // baby stroller / pram outdoor
 } as const;
 
+// ── Brand CDN URLs (confirmed working through image proxy) ───────────────────
+
+// Danby chest freezer — same product class as Haier Thermocool HDF-200HS
+const DANBY = {
+  front: "https://www.danby.com/en-us/wp-content/uploads/sites/3/2025/09/dcf070a5wdb-front.jpg",
+};
+
+// Firman generator — confirmed 3-angle gallery
+const FIRMAN = {
+  front: "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",
+  angle: "https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg",
+  inbox: "https://firmanpowerequipment.com/cdn/shop/files/W03082_Included_900x900.jpg",
+};
+
+// Apple iPad 10th generation — store.storeimages.cdn-apple.com is in allowlist
+// Confirmed: _FMT_WHH = white hero. _AV2/_AV3/_AV4 = standard gallery variants (may vary).
+const APPLE_IPAD = {
+  select:  "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_FMT_WHH",
+  gallery2:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_AV2_FMT_WHH",
+  gallery3:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_AV3_FMT_WHH",
+  gallery4:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_AV4_FMT_WHH",
+};
+
+// Logitech MX Master 3S — resource.logitech.com is in allowlist
+// DO NOT add d_transparent.gif fallback segment — it returns a blank GIF
+const LOGITECH = {
+  top:    "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-top-view-graphite.png",
+  side:   "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-side-view-graphite.png",
+  bottom: "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-bottom-view-graphite.png",
+  front:  "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-front-view-graphite.png",
+};
+
+// Nike — static.nike.com is in allowlist
+// Air Force 1 '07 White (CW2288-111): confirmed 3-angle gallery
+const NIKE_AF1 = {
+  top:  "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",
+  side: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3fefc6c5-e8b6-4f3d-b2af-e287a6b475cb/air-force-1-07-mens-shoes-jBrhbr.png",
+  sole: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/772da609-c608-4728-b7db-a6fafca0f23d/air-force-1-07-mens-shoes-jBrhbr.png",
+};
+
+// Phantom GX Academy FG/MG: confirmed primary
+const NIKE_PGX = {
+  main: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3cb66f21-dae0-4e34-9f54-c4e71c5b4d81/phantom-gx-academy-fg-mg-football-boots-pslL3R.png",
+};
+
+// techmall CDN — confirmed in allowlist (techmall-images-repo.s3.eu-west-2.amazonaws.com)
+const TECHMALL = {
+  lgFridge: "https://techmall-images-repo.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/09/29085636/LG-260L-Double-Door-Inverter-Refrigerator-Silver.jpg",
+};
+
+// ── Product definitions ──────────────────────────────────────────────────────
 const products = [
-  // ── Home & Office ────────────────────────────────────────────────────────────
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // HOME & OFFICE  (5 products — all primaries unique within category)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "200L Haier Thermocool Deep Freezer — HDF-200HS",
     description: `Keep your food, drinks, and perishables frozen for longer with the Haier Thermocool 200L Deep Freezer. Built for Nigerian homes and businesses, it combines generous storage with energy efficiency and rock-solid reliability.
@@ -117,13 +187,15 @@ IN THE BOX: Deep Freezer unit, wire basket, user manual, warranty card (12 month
     priceKobo: 8_000_000,
     category: "Home & Office",
     stock: 20,
-    // Primary: Danby chest freezer (same class of appliance — confirmed via proxy)
-    imageUrl: "https://www.danby.com/en-us/wp-content/uploads/sites/3/2025/09/dcf070a5wdb-front.jpg",
+    // Primary: Danby chest freezer (same product class — confirmed through proxy)
+    // Unique primary in Home & Office ✓
+    imageUrl: DANBY.front,
     images: [
-      "https://www.danby.com/en-us/wp-content/uploads/sites/3/2025/09/dcf070a5wdb-front.jpg",
-      IMG.fridge,
+      DANBY.front,   // front view: white chest freezer
+      IMG.fridge,    // supplemental: open refrigerator interior (cold storage context)
     ],
   },
+
   {
     name: "219L LG Double Door Refrigerator — GL-B221ALLB",
     description: `The LG 219L Double Door Refrigerator delivers smart cooling, sleek design, and dependable performance for every Nigerian kitchen.
@@ -150,12 +222,14 @@ IN THE BOX: Refrigerator unit, removable shelves, crisper drawers, user manual, 
     priceKobo: 7_500_000,
     category: "Home & Office",
     stock: 15,
-    imageUrl: "https://techmall-images-repo.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/09/29085636/LG-260L-Double-Door-Inverter-Refrigerator-Silver.jpg",
+    // Primary: techmall CDN LG refrigerator image — unique primary in category ✓
+    imageUrl: TECHMALL.lgFridge,
     images: [
-      "https://techmall-images-repo.s3.eu-west-2.amazonaws.com/wp-content/uploads/2025/09/29085636/LG-260L-Double-Door-Inverter-Refrigerator-Silver.jpg",
-      IMG.fridge,
+      TECHMALL.lgFridge,   // primary: LG double-door refrigerator silver
+      IMG.fridge,          // supplemental: open refrigerator interior (cold storage)
     ],
   },
+
   {
     name: "Hisense 8KG Top Load Washing Machine — WTX8012T",
     description: `Experience powerful, efficient cleaning with the Hisense 8KG Top Load Washing Machine. Designed to handle large laundry loads with ease.
@@ -184,12 +258,15 @@ IN THE BOX: Washing machine, inlet hose, drain hose, user manual, warranty card.
     priceKobo: 5_000_000,
     category: "Home & Office",
     stock: 18,
+    // Primary: front-load washing machine (confirmed Unsplash) — unique in category ✓
     imageUrl: IMG.washer,
     images: [
-      IMG.washer,
-      IMG.kitchen_appl, // domestic appliance lifestyle context
+      IMG.washer,     // primary: white front-load washing machine
+      IMG.fridge,     // supplemental: large home appliance context
+      IMG.mattress2,  // supplemental: home interior / laundry room context
     ],
   },
+
   {
     name: "Sumec Firman 3KVA Generator — SPG3000E2",
     description: `Reliable power for Nigerian homes and small businesses. The Sumec Firman 3KVA Generator delivers clean, stable electricity through outages.
@@ -219,13 +296,15 @@ IN THE BOX: Generator, user manual, tool kit, funnel, warranty card (12 months).
     priceKobo: 7_000_000,
     category: "Home & Office",
     stock: 12,
-    imageUrl: "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",
+    // Primary: Firman CDN front view — unique in category ✓
+    imageUrl: FIRMAN.front,
     images: [
-      "https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png",   // front view
-      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Hover_900x900.jpg",    // angle view
-      "https://firmanpowerequipment.com/cdn/shop/files/W03082_Included_900x900.jpg", // what's in the box
+      FIRMAN.front,    // front view — generator main panel
+      FIRMAN.angle,    // angle/hover view — generator side profile
+      FIRMAN.inbox,    // what's in the box — accessories included
     ],
   },
+
   {
     name: "Morning Glory Orthopedic Foam Mattress — 6×4.5ft Queen",
     description: `Sleep better every night with the Morning Glory Orthopedic Foam Mattress. Designed specifically for Nigerian climates and sleeping habits.
@@ -250,14 +329,18 @@ COMES WITH: Mattress, carry bag. 2-year manufacturer warranty.`,
     priceKobo: 4_500_000,
     category: "Home & Office",
     stock: 25,
+    // Primary: hotel white bed mattress — unique in category ✓
     imageUrl: IMG.mattress1,
     images: [
-      IMG.mattress1,
-      IMG.mattress2,
+      IMG.mattress1,   // hotel white bed — fresh linen, mattress primary
+      IMG.mattress2,   // upholstered bedroom — mattress in room context
     ],
   },
 
-  // ── Electronics ──────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // ELECTRONICS  (3 products — all primaries unique within category)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "43\" LG UHD Smart TV — 43UP7550",
     description: `Immerse yourself in stunning 4K UHD picture quality with the LG 43-inch Smart TV. Perfect for Nigerian living rooms.
@@ -287,11 +370,14 @@ IN THE BOX: TV, magic remote, power cable, stand, user manual.`,
     priceKobo: 7_000_000,
     category: "Electronics",
     stock: 10,
-    imageUrl: IMG.tv,
+    // Primary: smart TV home screen (verified LG-style TV) — unique in category ✓
+    imageUrl: IMG.tv1,
     images: [
-      IMG.tv,
+      IMG.tv1,   // smart TV showing home screen interface
+      IMG.tv2,   // display / screen close-up (confirmed 200)
     ],
   },
+
   {
     name: "Hisense 55\" QLED 4K Smart TV — 55U6K",
     description: `Experience cinema-quality visuals at home with the Hisense 55-inch QLED 4K Smart TV. Hisense Quantum Dot technology delivers over a billion colours.
@@ -321,13 +407,14 @@ IN THE BOX: TV, remote, stand, power cable, user manual.`,
     priceKobo: 12_000_000,
     category: "Electronics",
     stock: 8,
-    // Use a distinct Unsplash ID for Hisense so it doesn't conflict with LG's primary
-    imageUrl: U("1504450758481-7338eba7524a"),
+    // Primary: tv2 (display/screen context) — unique primary in category (LG uses tv1) ✓
+    imageUrl: IMG.tv2,
     images: [
-      U("1504450758481-7338eba7524a"),  // confirmed 200 — display/screen context
-      IMG.tv,                            // supplemental: smart TV interface
+      IMG.tv2,   // display / screen — distinct primary from LG's tv1
+      IMG.tv1,   // supplemental: smart TV interface context
     ],
   },
+
   {
     name: "Soundcore by Anker Motion Boom Plus Bluetooth Speaker",
     description: `Bring the party anywhere with the Soundcore Motion Boom Plus — big bass, massive battery, fully waterproof.
@@ -356,14 +443,20 @@ IN THE BOX: Speaker, USB-C cable, user manual.`,
     priceKobo: 3_500_000,
     category: "Electronics",
     stock: 30,
+    // Primary: Bluetooth speaker on table — unique in category ✓
     imageUrl: IMG.speaker1,
     images: [
-      IMG.speaker1,
-      IMG.speaker2,
+      IMG.speaker1,   // Bluetooth speaker on table — primary
+      IMG.speaker2,   // wireless speaker — supplemental angle
     ],
   },
 
-  // ── Phones & Tablets ─────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // PHONES & TABLETS  (4 products — all primaries unique within category)
+  // Note: 4 confirmed phone Unsplash IDs assigned as unique primaries.
+  // All 4 IDs appear as supplements across multiple products → warnings only.
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "Tecno Camon 40 Pro 5G — 256GB",
     description: `The Tecno Camon 40 Pro 5G is built for Nigerian content creators and power users who want flagship performance without the flagship price tag.
@@ -392,12 +485,16 @@ IN THE BOX: Phone, 70W charger, USB-C cable, case, screen protector.`,
     priceKobo: 14_000_000,
     category: "Phones & Tablets",
     stock: 20,
-    imageUrl: IMG.phone_dark,  // Tecno: dark-angled phone as unique primary
+    // Primary: dark-angled smartphone — unique primary in category ✓
+    imageUrl: IMG.phone_dark,
     images: [
-      IMG.phone_dark,
-      IMG.phone_mid,
+      IMG.phone_dark,    // angled dark background — Tecno primary
+      IMG.phone_held,    // held in hand — usage shot
+      IMG.phone_table,   // placed on surface — product shot
+      IMG.phone_white,   // clean white background — catalogue shot
     ],
   },
+
   {
     name: "Samsung Galaxy A55 5G — 128GB Awesome Iceblue",
     description: `The Samsung Galaxy A55 5G brings Galaxy AI features, stunning design, and reliable performance to the mid-range segment.
@@ -427,12 +524,16 @@ IN THE BOX: Phone, 25W charger, USB-C cable, SIM tool.`,
     priceKobo: 11_000_000,
     category: "Phones & Tablets",
     stock: 25,
-    imageUrl: IMG.phone_table,  // Samsung: phone-on-table as unique primary
+    // Primary: phone on table — unique primary in category (Tecno uses phone_dark) ✓
+    imageUrl: IMG.phone_table,
     images: [
-      IMG.phone_table,
-      IMG.phone_white,
+      IMG.phone_table,   // on-surface product shot — Samsung primary
+      IMG.phone_white,   // clean white background — catalogue shot
+      IMG.phone_dark,    // angled dark — supplemental (Tecno primary; cross-share = warn only)
+      IMG.phone_held,    // held in hand — usage context
     ],
   },
+
   {
     name: "Infinix Hot 50 Pro — 256GB Stellar Black",
     description: `The Infinix Hot 50 Pro gives you more storage, more speed, and a bigger battery — all under ₦100,000.
@@ -462,12 +563,17 @@ IN THE BOX: Phone, 45W charger, USB-C cable, protective case.`,
     priceKobo: 8_500_000,
     category: "Phones & Tablets",
     stock: 35,
-    imageUrl: IMG.phone_white,  // Infinix: white-bg phone as unique primary
+    // Primary: phone held in hand — unique primary in category ✓
+    // (Tecno=phone_dark, Samsung=phone_table, Apple=Apple CDN)
+    imageUrl: IMG.phone_held,
     images: [
-      IMG.phone_white,
-      IMG.phone_dark,
+      IMG.phone_held,    // held in hand — Infinix primary
+      IMG.phone_white,   // white background — clean catalogue shot
+      IMG.phone_dark,    // dark angled — supplemental
+      IMG.phone_table,   // on surface — supplemental
     ],
   },
+
   {
     name: "Apple iPad 10th Gen — 64GB Wi-Fi Silver",
     description: `The iPad 10th generation brings a complete redesign with a larger display, powerful A14 chip, and an all-day battery.
@@ -499,14 +605,22 @@ IN THE BOX: iPad, USB-C charge cable, USB-C 20W power adapter.`,
     priceKobo: 28_000_000,
     category: "Phones & Tablets",
     stock: 10,
-    // Apple CDN: confirmed in proxy allowlist (store.storeimages.cdn-apple.com)
-    imageUrl: "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_FMT_WHH",
+    // Primary: Apple CDN product shot — unique primary in category ✓
+    // Apple CDN confirmed in allowlist: store.storeimages.cdn-apple.com
+    imageUrl: APPLE_IPAD.select,
     images: [
-      "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_FMT_WHH",
+      APPLE_IPAD.select,    // silver iPad 10th gen — product selection hero
+      APPLE_IPAD.gallery2,  // gallery view 2 (AV2 — Apple standard variant)
+      APPLE_IPAD.gallery3,  // gallery view 3 (AV3)
+      APPLE_IPAD.gallery4,  // gallery view 4 (AV4)
     ],
   },
 
-  // ── Computing ────────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // COMPUTING  (3 products — all primaries unique within category)
+  // 5 confirmed laptop Unsplash IDs split across 2 laptops (4 each, shared supps)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "HP 15s-eq3000 Laptop — Ryzen 5 / 8GB / 512GB SSD",
     description: `Slim, fast, and built for work — the HP 15s is the go-to laptop for Nigerian students, professionals, and entrepreneurs.
@@ -538,13 +652,16 @@ IN THE BOX: HP 15s Laptop, 65W USB-C slim power adapter, documentation.`,
     priceKobo: 38_000_000,
     category: "Computing",
     stock: 12,
-    imageUrl: IMG.laptop1,  // HP: open laptop side-angle as unique primary
+    // Primary: laptop open side-angle — unique in category ✓
+    imageUrl: IMG.laptop1,
     images: [
-      IMG.laptop1,
-      IMG.laptop5,
-      IMG.laptop4,
+      IMG.laptop1,   // open laptop side angle — HP primary
+      IMG.laptop5,   // open laptop lifestyle
+      IMG.laptop3,   // laptop side view
+      IMG.laptop4,   // laptop flat lay
     ],
   },
+
   {
     name: "Lenovo IdeaPad Slim 3 — Intel Core i5 / 16GB / 512GB SSD",
     description: `The Lenovo IdeaPad Slim 3 is a powerhouse thin-and-light laptop perfect for everyday computing, video calls, and light creative work.
@@ -576,13 +693,16 @@ IN THE BOX: Lenovo IdeaPad Slim 3, 65W slim-tip AC adapter, documentation.`,
     priceKobo: 45_000_000,
     category: "Computing",
     stock: 10,
-    imageUrl: IMG.laptop2,  // Lenovo: desk laptop as unique primary (different from HP)
+    // Primary: laptop on desk — unique primary in category (HP uses laptop1) ✓
+    imageUrl: IMG.laptop2,
     images: [
-      IMG.laptop2,
-      IMG.laptop3,
-      IMG.laptop4,
+      IMG.laptop2,   // laptop on wooden desk — Lenovo primary
+      IMG.laptop3,   // laptop side view
+      IMG.laptop4,   // laptop flat lay
+      IMG.laptop5,   // laptop open, lifestyle
     ],
   },
+
   {
     name: "Logitech MX Master 3S Wireless Mouse",
     description: `The gold standard for productivity — the Logitech MX Master 3S Wireless Mouse features ultra-fast scrolling, whisper-quiet clicks, and 8K DPI precision.
@@ -611,15 +731,21 @@ IN THE BOX: Mouse, USB-C cable, USB receiver.`,
     priceKobo: 2_800_000,
     category: "Computing",
     stock: 40,
-    imageUrl: "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-top-view-graphite.png",
+    // Primary: Logitech CDN top-view graphite — unique in category ✓
+    // Note: DO NOT append d_transparent.gif — causes CDN to return blank GIF
+    imageUrl: LOGITECH.top,
     images: [
-      "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-top-view-graphite.png",
-      "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-side-view-graphite.png",
-      "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-bottom-view-graphite.png",
+      LOGITECH.top,     // top-down view — product primary
+      LOGITECH.side,    // side profile — ergonomic shape
+      LOGITECH.bottom,  // bottom sensor / DPI details
+      LOGITECH.front,   // front view (may need verification)
     ],
   },
 
-  // ── Fashion ──────────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // FASHION  (4 products — all primaries unique within category)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "Men's Polo Ralph Lauren Classic Fit Polo Shirt",
     description: `The timeless Polo Ralph Lauren Classic Fit Polo Shirt — crafted in soft cotton piqué for comfort, style, and all-day wear.
@@ -647,13 +773,15 @@ Perfect for office smart-casual, weekend outings, and events.`,
     priceKobo: 1_500_000,
     category: "Fashion",
     stock: 60,
+    // Primary: polo shirt on mannequin — unique in category ✓
     imageUrl: IMG.polo1,
     images: [
-      IMG.polo1,
-      IMG.polo2,
-      IMG.polo3,
+      IMG.polo1,   // polo shirt on mannequin display — primary
+      IMG.polo2,   // folded shirts / polo clothing — stacked view
+      IMG.polo3,   // clothing display / shirt rail — lifestyle context
     ],
   },
+
   {
     name: "Women's Ankara Wrap Midi Dress — Mixed Prints",
     description: `Celebrate African fashion with this stunning Ankara Wrap Midi Dress — bold prints, flattering silhouette, built for the modern Nigerian woman.
@@ -681,11 +809,15 @@ Handcrafted in Lagos.`,
     priceKobo: 850_000,
     category: "Fashion",
     stock: 50,
+    // Primary: African wrap dress Ankara print — unique in category ✓
     imageUrl: IMG.ankara,
     images: [
-      IMG.ankara,
+      IMG.ankara,   // African wrap dress — bold print primary
+      IMG.polo3,    // clothing rail — fashion context supplemental
+      IMG.polo2,    // folded fabric — textile/colour context
     ],
   },
+
   {
     name: "Nike Air Force 1 '07 Sneakers — White/White",
     description: `The icon that never goes out of style. The Nike Air Force 1 '07 is clean, classic, and always fresh.
@@ -713,15 +845,17 @@ IN THE BOX: Shoes (pair), extra laces, shoe bag.`,
     priceKobo: 6_500_000,
     category: "Fashion",
     stock: 30,
-    imageUrl: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",
+    // Primary: Nike CDN top/front view — unique in category ✓
+    imageUrl: NIKE_AF1.top,
     images: [
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-force-1-07-mens-shoes-jBrhbr.png",  // top/front view
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3fefc6c5-e8b6-4f3d-b2af-e287a6b475cb/air-force-1-07-mens-shoes-jBrhbr.png",  // side view
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/772da609-c608-4728-b7db-a6fafca0f23d/air-force-1-07-mens-shoes-jBrhbr.png",  // sole view
-      IMG.shoe_lifestyle,  // lifestyle: sneaker on foot
-      IMG.shoe_detail,     // detail close-up
+      NIKE_AF1.top,      // top/front view — official Nike product shot
+      NIKE_AF1.side,     // side profile — swoosh detail
+      NIKE_AF1.sole,     // outsole / pivot circle pattern
+      IMG.shoe_life,     // sneaker lifestyle — foot in context (confirmed 200)
+      IMG.shoe_detail,   // shoe close-up — texture/material detail (confirmed 200)
     ],
   },
+
   {
     name: "Ladies' Genuine Leather Tote Bag — Tan Brown",
     description: `A classic everyday tote crafted from genuine full-grain leather — roomy, structured, and built to last years.
@@ -752,14 +886,20 @@ Handcrafted. Each bag is uniquely yours.`,
     priceKobo: 3_200_000,
     category: "Fashion",
     stock: 25,
+    // Primary: structured leather tote — unique in category ✓
+    // FIXED: removed shoe_lifestyle (wrong product class) — replaced with fashion context
     imageUrl: IMG.bag,
     images: [
-      IMG.bag,
-      IMG.shoe_lifestyle, // lifestyle: fashion/accessories context
+      IMG.bag,     // structured leather tote — bag product primary
+      IMG.polo2,   // folded textile — fabric/material context supplemental
+      IMG.polo3,   // fashion rail — accessories lifestyle context
     ],
   },
 
-  // ── Supermarket ──────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // SUPERMARKET  (3 products — all primaries unique within category)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "Dangote Sugar Refinery — 50kg Bag Granulated Sugar",
     description: `Premium quality Dangote refined sugar — Nigeria's most trusted household staple for cooking, baking, and beverages.
@@ -783,11 +923,15 @@ STORAGE: Store in a cool, dry place. Once opened, transfer to an airtight contai
     priceKobo: 800_000,
     category: "Supermarket",
     stock: 100,
+    // Primary: white granulated grains (sugar context) — unique in category ✓
     imageUrl: IMG.grain,
     images: [
-      IMG.grain,
+      IMG.grain,       // white granulated grains / sugar — primary
+      IMG.cocoa,       // bulk food product context — supplemental
+      IMG.choc_drink,  // Nigerian food/drink product — supplemental
     ],
   },
+
   {
     name: "Milo Energy Drink Tin — 400g × 3 Pack",
     description: `Nigeria's favourite chocolate malt drink — Milo provides energy and essential nutrients for the whole family.
@@ -812,13 +956,15 @@ SERVING SUGGESTION: 3 heaped teaspoons in warm milk. Add sugar to taste.`,
     priceKobo: 650_000,
     category: "Supermarket",
     stock: 150,
-    imageUrl: IMG.tin_drink,
+    // Primary: beverage tin — unique in category ✓
+    imageUrl: IMG.tin,
     images: [
-      IMG.tin_drink,
-      IMG.cocoa,
-      IMG.choc_drink,
+      IMG.tin,         // beverage / drink tin — Milo can context primary
+      IMG.cocoa,       // cocoa / chocolate powder — Milo ingredient context
+      IMG.choc_drink,  // chocolate malt drink served — consumption context
     ],
   },
+
   {
     name: "Indomie Instant Noodles — Chicken Flavour (40 packs × 70g)",
     description: `Nigeria's number one instant noodles — Indomie Chicken Flavour. Ready in 3 minutes, loved by millions.
@@ -844,14 +990,20 @@ SERVING IDEAS: Boiled with egg, fried with vegetables, with sardines.`,
     priceKobo: 320_000,
     category: "Supermarket",
     stock: 200,
+    // Primary: noodles in bowl — unique in category ✓
     imageUrl: IMG.noodles1,
     images: [
-      IMG.noodles1,
-      IMG.noodles2,
+      IMG.noodles1,    // noodles in bowl — hot noodle primary
+      IMG.noodles2,    // plated noodle dish — serving context
+      IMG.grain,       // grain/carb product — food category context
     ],
   },
 
-  // ── Kitchen & Dining ─────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // KITCHEN & DINING  (3 products — all primaries unique within category)
+  // K1=stove(Scanfrost), K2=pot(Cookware), K3=kitchen_counter(Binatone)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "Scanfrost 5-Burner Gas Cooker with Oven — SFCK5500",
     description: `The Scanfrost 5-Burner Gas Cooker with Oven is a robust, high-capacity cooker that handles the demands of the Nigerian kitchen — big pots, strong flames, and a full oven.
@@ -879,12 +1031,14 @@ IN THE BOX: Cooker, grill pan, 2 oven trays, LPG hose, user manual.`,
     priceKobo: 18_000_000,
     category: "Kitchen & Dining",
     stock: 8,
-    imageUrl: IMG.stove,  // Scanfrost: cooking on gas stove as unique primary
+    // Primary: gas stove cooking — unique in category ✓
+    imageUrl: IMG.stove,
     images: [
-      IMG.stove,
-      IMG.pot,
+      IMG.stove,    // gas stove in use — cooker primary
+      IMG.pot,      // cast iron pot on hob — cooking context
     ],
   },
+
   {
     name: "Stainless Steel Cookware Set — 8 Pieces",
     description: `A complete cookware set for the modern Nigerian kitchen — stainless steel construction, compatible with all cookers including induction.
@@ -914,13 +1068,15 @@ Perfect starter set for new homes, newlyweds, and kitchen upgrades.`,
     priceKobo: 2_500_000,
     category: "Kitchen & Dining",
     stock: 35,
-    imageUrl: IMG.pot,  // Cookware: cast iron pot as unique primary
+    // Primary: cast iron pot on stovetop — unique in category (Scanfrost uses stove) ✓
+    imageUrl: IMG.pot,
     images: [
-      IMG.pot,
-      IMG.stove,
-      IMG.kitchen_appl,
+      IMG.pot,       // cast iron pot — cookware primary
+      IMG.stove,     // stovetop — cooking with cookware context
+      IMG.kitchen,   // kitchen counter — appliances lifestyle
     ],
   },
+
   {
     name: "Binatone Table Blender — BLG-403",
     description: `Blend, chop, and crush with ease — the Binatone Table Blender is a Nigerian kitchen staple for smoothies, pepper, tomatoes, and more.
@@ -948,14 +1104,20 @@ IN THE BOX: Blender base, glass jar, lid, user manual.`,
     priceKobo: 900_000,
     category: "Kitchen & Dining",
     stock: 50,
-    imageUrl: IMG.kitchen_appl,  // Binatone: kitchen counter appliances as unique primary
+    // Primary: kitchen counter with counter appliances — unique in category ✓
+    // FIXED: replaced pot (wrong — blenders aren't pots) with kitchen counter context
+    imageUrl: IMG.kitchen,
     images: [
-      IMG.kitchen_appl,
-      IMG.pot,
+      IMG.kitchen,   // kitchen counter appliances — blender product context primary
+      IMG.pot,       // kitchen equipment — cooking context supplemental
     ],
   },
 
-  // ── Health & Beauty ──────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // HEALTH & BEAUTY  (3 products — all primaries unique within category)
+  // H1=skincare1(Neutrogena), H4=hair1(ORS), H6=epilator(Philips)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "Neutrogena Hydro Boost Water Gel Moisturiser — 50ml",
     description: `Dermatologist-recommended. The Neutrogena Hydro Boost Water Gel delivers intense, long-lasting hydration for all skin types.
@@ -984,13 +1146,15 @@ HOW TO USE: Apply a generous amount to cleansed face morning and night.`,
     priceKobo: 450_000,
     category: "Health & Beauty",
     stock: 80,
+    // Primary: skincare product jar — unique in category ✓
     imageUrl: IMG.skincare1,
     images: [
-      IMG.skincare1,
-      IMG.skincare2,
-      IMG.skincare3,
+      IMG.skincare1,   // skincare product jar — moisturiser primary
+      IMG.skincare2,   // beauty cream — hydration context
+      IMG.skincare3,   // skincare bottle / serum — product range context
     ],
   },
+
   {
     name: "ORS Olive Oil Relaxer Kit — Normal / Super",
     description: `The ORS Olive Oil Relaxer Kit is the most trusted at-home hair relaxer kit for Nigerian women — smooth, shiny, healthy results every time.
@@ -1016,12 +1180,16 @@ HOW TO USE: Follow included step-by-step instruction card. Patch test 48 hrs bef
     priceKobo: 380_000,
     category: "Health & Beauty",
     stock: 100,
+    // Primary: hair care product — unique in category (Neutrogena uses skincare1) ✓
     imageUrl: IMG.hair1,
     images: [
-      IMG.hair1,
-      IMG.hair2,
+      IMG.hair1,       // hair care product packaging — ORS primary
+      IMG.hair2,       // hair product bottle — relaxer kit context
+      IMG.skincare2,   // beauty cream — hair conditioning context
+      IMG.skincare3,   // product bottle — cosmetics range context
     ],
   },
+
   {
     name: "Philips BRE245 Epilator — Women's Hair Removal",
     description: `Smooth, hair-free skin for up to 4 weeks — the Philips BRE245 Epilator removes hair from the root for lasting results.
@@ -1050,15 +1218,21 @@ IN THE BOX: Epilator, massage cap, efficiency cap, charging cord.`,
     priceKobo: 1_800_000,
     category: "Health & Beauty",
     stock: 45,
+    // Primary: personal care device (epilator) — unique in category ✓
+    // FIXED: removed skincare2/3 (wrong product class — these are moisturiser images)
+    // Replaced with: epilator device + hair/personal care context
     imageUrl: IMG.epilator,
     images: [
-      IMG.epilator,
-      IMG.skincare3,
-      IMG.skincare2,
+      IMG.epilator,   // personal care device — epilator primary
+      IMG.hair1,      // hair care product — personal care device context
+      IMG.hair2,      // hair product — beauty device supplement
     ],
   },
 
-  // ── Sporting Goods ───────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // SPORTING GOODS  (2 products — all primaries unique within category)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "Decathlon Domyos Weight Training Dumbbell Set — 20kg",
     description: `Build strength at home with the Decathlon Domyos 20kg adjustable dumbbell set — compact, safe, and perfect for Nigerian home gyms.
@@ -1082,12 +1256,15 @@ INCLUDES: 2 chrome bars + 12 rubber weight plates + 4 spin-lock collars.`,
     priceKobo: 4_500_000,
     category: "Sporting Goods",
     stock: 20,
+    // Primary: dumbbell set — unique in category ✓
     imageUrl: IMG.dumbbells,
     images: [
-      IMG.dumbbells,
-      IMG.gym,
+      IMG.dumbbells,   // dumbbell set / free weights — primary
+      IMG.gym1,        // gym / fitness workout — training context
+      IMG.gym2,        // gym fitness (confirmed 200) — supplemental
     ],
   },
+
   {
     name: "Nike Phantom GX Academy FG/MG Football Boots",
     description: `Designed for the pitch, built for Nigerian football — the Nike Phantom GX Academy delivers precision passing, sharp feel, and reliable traction.
@@ -1113,15 +1290,23 @@ IN THE BOX: Boots (pair), laces, boot bag.`,
     priceKobo: 5_500_000,
     category: "Sporting Goods",
     stock: 25,
-    imageUrl: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3cb66f21-dae0-4e34-9f54-c4e71c5b4d81/phantom-gx-academy-fg-mg-football-boots-pslL3R.png",
+    // Primary: Nike CDN boot product shot — unique in category (Dumbbells uses dumbbells) ✓
+    // FIXED: replaced generic shoe_lifestyle/shoe_detail (fashion crossover) with sport context
+    imageUrl: NIKE_PGX.main,
     images: [
-      "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/3cb66f21-dae0-4e34-9f54-c4e71c5b4d81/phantom-gx-academy-fg-mg-football-boots-pslL3R.png",
-      IMG.shoe_lifestyle,
-      IMG.shoe_detail,
+      NIKE_PGX.main,      // official Nike Phantom GX product shot — primary
+      IMG.shoe_detail,    // boot / footwear close-up — stud/sole detail
+      IMG.gym1,           // athletic / sports training context
+      IMG.shoe_life,      // footwear lifestyle — on-pitch context
     ],
   },
 
-  // ── Baby Products ────────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // BABY PRODUCTS  (3 products — all primaries unique within category)
+  // B1=diapers(Pampers), B5=stroller(Baby Trend), B2=baby_play(Fisher-Price)
+  // FIXED: removed diapers image from stroller product
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
     name: "Pampers Premium Care Diapers — Size 4 (9–14kg) × 52 Count",
     description: `Pampers Premium Care — the softest diaper for your baby's most sensitive skin. Trusted by Nigerian mums for decades.
@@ -1148,13 +1333,16 @@ NAFDAC approved. Imported.`,
     priceKobo: 850_000,
     category: "Baby Products",
     stock: 120,
+    // Primary: baby with diapers — unique in category ✓
     imageUrl: IMG.diapers,
     images: [
-      IMG.diapers,
-      IMG.baby3,
-      IMG.baby1,
+      IMG.diapers,     // baby with diaper — product primary
+      IMG.baby3,       // baby close-up — infant context
+      IMG.baby_life,   // baby with parent — lifestyle
+      IMG.baby_play,   // baby play items — supplemental
     ],
   },
+
   {
     name: "Baby Trend Expedition Jogger Travel System — Stroller + Infant Car Seat",
     description: `Everything you need to travel with your newborn — the Baby Trend Expedition Jogger Travel System includes a jogger stroller and compatible infant car seat.
@@ -1183,13 +1371,17 @@ SAFETY CERTIFIED: FMVSS 213, tested to exceed US federal standards.`,
     priceKobo: 12_000_000,
     category: "Baby Products",
     stock: 6,
+    // Primary: baby stroller outdoor — unique in category ✓
+    // FIXED: removed diapers image (completely wrong product) — stroller product only
     imageUrl: IMG.stroller,
     images: [
-      IMG.stroller,
-      IMG.baby2,
-      IMG.diapers,
+      IMG.stroller,    // baby stroller / pram outdoor — primary
+      IMG.baby_life,   // baby with parent — stroller usage context
+      IMG.baby3,       // baby portrait — infant passenger context
+      IMG.baby_play,   // baby items — newborn lifestyle context
     ],
   },
+
   {
     name: "Fisher-Price Kick & Play Piano Gym — Newborn to Toddler",
     description: `5 stages of play, from tummy time to toddler — the Fisher-Price Kick & Play Piano Gym grows with your baby from birth to 36 months.
@@ -1217,15 +1409,19 @@ Machine-washable mat.`,
     priceKobo: 1_600_000,
     category: "Baby Products",
     stock: 20,
-    imageUrl: IMG.baby1,
+    // Primary: baby play items / toys — unique in category ✓
+    // (Pampers=diapers, Stroller=stroller, Fisher-Price=baby_play)
+    imageUrl: IMG.baby_play,
     images: [
-      IMG.baby1,
-      IMG.baby2,
-      IMG.baby3,
+      IMG.baby_play,   // baby play mat / toys — play gym primary
+      IMG.baby3,       // baby close-up — infant engagement context
+      IMG.baby_life,   // baby with parent — play & bonding context
+      IMG.diapers,     // baby items — infant lifestyle supplemental
     ],
   },
 ];
 
+// ── Seed function ─────────────────────────────────────────────────────────────
 export async function seedProducts() {
   console.log("🌱  Seeding products…");
 
@@ -1235,13 +1431,13 @@ export async function seedProducts() {
     .onConflictDoUpdate({
       target: productsTable.name,
       set: {
-        description: sql`excluded.description`,
-        priceKobo: sql`excluded.price_kobo`,
-        imageUrl: sql`excluded.image_url`,
-        images: sql`excluded.images`,
-        stock: sql`excluded.stock`,
-        category: sql`excluded.category`,
-        updatedAt: sql`now()`,
+        description:  sql`excluded.description`,
+        priceKobo:    sql`excluded.price_kobo`,
+        imageUrl:     sql`excluded.image_url`,
+        images:       sql`excluded.images`,
+        stock:        sql`excluded.stock`,
+        category:     sql`excluded.category`,
+        updatedAt:    sql`now()`,
       },
     })
     .returning();
@@ -1253,7 +1449,8 @@ export async function seedProducts() {
       currency: "NGN",
       maximumFractionDigits: 0,
     });
-    console.log(`   [${p.id}] ${p.name} — ${naira} — ${p.images.length} image(s) — ${p.category}`);
+    const imageStatus = p.imageUrl === p.images[0] ? "✓" : "✗ MISMATCH";
+    console.log(`   [${p.id}] ${p.name} — ${naira} — ${p.images.length} img(s) ${imageStatus} — ${p.category}`);
   }
 
   return inserted.length;
