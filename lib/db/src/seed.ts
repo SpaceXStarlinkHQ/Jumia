@@ -1047,12 +1047,13 @@ SERVING IDEAS: Boiled with egg, fried with vegetables, with sardines.`,
     category: "Supermarket",
     stock: 200,
     // Primary: noodles in bowl — unique in category (Sugar=grain, Milo=tin) ✓
+    // NOTE: grain (white granulated sugar) was wrong here — replaced with bev2 (warm Nigerian drink)
     imageUrl: IMG.noodles1,
     images: [
       IMG.noodles1,   // noodles in bowl — hot Indomie primary
       IMG.noodles2,   // plated noodle dish — serving context
       IMG.noodles3,   // noodle close-up / steaming bowl — chicken flavour
-      IMG.grain,      // dry carbohydrate product — bulk carton context
+      IMG.bev2,       // warm Nigerian beverage — food category context (not sugar grain)
     ],
   },
 
@@ -1165,12 +1166,14 @@ IN THE BOX: Blender base, glass jar, lid, user manual.`,
     category: "Kitchen & Dining",
     stock: 50,
     // Primary: kitchen counter with appliances — unique in category ✓
+    // NOTE: kitchen3 (gas burner close-up) is wrong for a blender — replaced with stove (cooking context)
+    //        pot2 (cooking pot) replaced with pot (general kitchen appliance context)
     imageUrl: IMG.kitchen,
     images: [
-      IMG.kitchen,   // kitchen counter appliances — blender product context primary
-      IMG.blender3,  // blender / food processor lifestyle — smoothie and blending
-      IMG.kitchen3,  // gas burner stove — kitchen in full use context
-      IMG.pot2,      // food preparation — cooking with kitchen tools
+      IMG.kitchen,   // kitchen counter appliances — blender in kitchen environment (primary)
+      IMG.blender3,  // blender / food processor lifestyle — smoothie and blending in action
+      IMG.stove,     // gas stove cooking — kitchen appliance in use context
+      IMG.pot,       // cookware on stove — kitchen tools and appliances context
     ],
   },
 
@@ -1351,14 +1354,15 @@ IN THE BOX: Boots (pair), laces, boot bag.`,
     priceKobo: 5_500_000,
     category: "Sporting Goods",
     stock: 25,
-    // Primary: shoe_detail (football boot close-up) — unique primary in Sporting Goods ✓
+    // Primary: football1 (boots on grass) — actual football boot image, unique in Sporting Goods ✓
+    // NOTE: shoe_detail and shoe_life are sneaker lifestyle shots — wrong for football boots
     // (Dumbbells uses IMG.dumbbells — completely different category of product)
-    imageUrl: IMG.shoe_detail,
+    imageUrl: IMG.football1,
     images: [
-      IMG.shoe_detail,    // boot / footwear close-up — stud and sole detail (primary)
-      IMG.shoe_life,      // footwear lifestyle — worn on foot context
-      IMG.football1,      // football boots on grass — FG pitch surface
-      IMG.football2,      // football boot close-up — Grip-Tex stud configuration
+      IMG.football1,   // football boots on grass — FG pitch surface (primary)
+      IMG.football2,   // football boot close-up / stud detail — Grip-Tex configuration
+      IMG.sport1,      // athletic training outdoor — football / sports context
+      IMG.shoe_life,   // footwear in use — worn on foot lifestyle context
     ],
   },
 

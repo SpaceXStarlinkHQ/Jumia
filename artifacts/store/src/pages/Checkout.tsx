@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,6 +51,11 @@ export default function Checkout() {
   const { items, totalKobo, itemCount } = useCart();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Update page title
+  useEffect(() => {
+    document.title = "Checkout — BigDeals Nigeria";
+  }, []);
 
   const initiateCheckout = useInitiateCheckout();
 

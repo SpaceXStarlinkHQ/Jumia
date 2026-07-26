@@ -2,6 +2,19 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useListProducts } from "@workspace/api-client-react";
 import { formatNaira } from "@/lib/utils";
+
+// Update document title based on current view
+function usePageTitle(search: string, category: string) {
+  useEffect(() => {
+    if (search) {
+      document.title = `Search: "${search}" — BigDeals Nigeria`;
+    } else if (category) {
+      document.title = `${category} — BigDeals Nigeria`;
+    } else {
+      document.title = "BigDeals Nigeria — Best Deals on Electronics, Phones, Fashion & More";
+    }
+  }, [search, category]);
+}
 import {
   ShoppingCart, ChevronRight, Star, Truck, Shield,
   HeadphonesIcon, RotateCcw, Package, Flame, Tag, Zap,
@@ -96,6 +109,7 @@ export default function Catalog() {
   const { toast } = useToast();
 
   const isHome = !search && !category;
+  usePageTitle(search, category);
 
   const handleAddToCart = (e: React.MouseEvent, product: NonNullable<typeof products>[0]) => {
     e.preventDefault();
@@ -162,7 +176,7 @@ export default function Catalog() {
                   Limited stock — gone when it's gone.
                 </p>
                 <Link
-                  href="/?category=Electronics"
+                  href="/"
                   className="inline-flex items-center gap-2 font-black px-7 py-3 rounded-xl text-[#0E0D0C] text-sm uppercase tracking-wide shadow-xl hover:scale-105 transition-transform duration-200"
                   style={{ background: "linear-gradient(135deg, #FFCF00 0%, #FF9A3C 100%)" }}
                 >
@@ -255,7 +269,7 @@ export default function Catalog() {
                 </div>
                 <FlashTimer />
               </div>
-              <Link href="/?category=Electronics" className="text-white/80 hover:text-white text-sm font-bold flex items-center gap-1 transition-colors">
+              <Link href="/" className="text-white/80 hover:text-white text-sm font-bold flex items-center gap-1 transition-colors">
                 See All <ChevronRight className="w-4 h-4" />
               </Link>
             </div>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
@@ -9,6 +10,10 @@ import { getOriginalPrice } from "@/lib/jumia-mock";
 export default function Cart() {
   const { items, updateQuantity, removeItem, totalKobo, itemCount } = useCart();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    document.title = `Cart (${itemCount}) — BigDeals Nigeria`;
+  }, [itemCount]);
 
   if (items.length === 0) {
     return (

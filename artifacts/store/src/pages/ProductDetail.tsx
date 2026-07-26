@@ -71,6 +71,11 @@ function isProductConsistent(product: {
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const productId = parseInt(id, 10);
+
+  // Update page title when product loads
+  useEffect(() => {
+    document.title = "Loading... — BigDeals Nigeria";
+  }, [productId]);
   const [, setLocation] = useLocation();
   const { data: product, isLoading, error } = useGetProduct(productId, {
     query: { enabled: !isNaN(productId), queryKey: ["/api/products", productId] }
@@ -126,6 +131,13 @@ export default function ProductDetail() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Update title once product data arrives
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} — BigDeals Nigeria`;
+    }
+  }, [product]);
 
   if (isNaN(productId)) {
     return <div>Invalid product ID</div>;
@@ -337,7 +349,12 @@ export default function ProductDetail() {
               <span className="text-gray-400 line-through text-lg">{formatNaira(origPrice)}</span>
               <span className="bg-red-100 text-[#E53935] text-xs font-bold px-2 py-0.5 rounded">-{discount}%</span>
             </div>
-            <div className="text-xs text-gray-500 mb-2">Few units left</div>
+            {product.stock > 0 && product.stock <= 10 && (
+              <div className="text-xs text-red-500 font-semibold mb-2">Only {product.stock} left in stock — order soon!</div>
+            )}
+            {product.stock > 10 && (
+              <div className="text-xs text-gray-500 mb-2">In stock</div>
+            )}
             <div className="flex flex-col gap-1.5 mt-3">
               <div className="flex items-center text-[#3CB64A] text-sm font-medium gap-1.5">
                 <Truck className="w-4 h-4 shrink-0" />
