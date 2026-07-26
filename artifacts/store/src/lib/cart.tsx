@@ -20,8 +20,35 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const STORAGE_KEY = "bigdeals_cart_v1";
+
+function loadFromStorage(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed as CartItem[];
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(items: CartItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    // Storage unavailable (private browsing, quota exceeded) — silently skip
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => loadFromStorage());
+
+  // Persist to localStorage whenever cart changes
+  useEffect(() => {
+    saveToStorage(items);
+  }, [items]);
 
   const addItem = (newItem: CartItem) => {
     setItems((current) => {
@@ -42,6 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
+    if (quantity < 1) return; // guard against zero/negative
     setItems((current) =>
       current.map((i) => (i.productId === productId ? { ...i, quantity } : i))
     );

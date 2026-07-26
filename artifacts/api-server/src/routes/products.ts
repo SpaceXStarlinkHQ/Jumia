@@ -32,6 +32,7 @@ router.get("/products", async (req, res): Promise<void> => {
     conditions.push(or(
       ilike(productsTable.name, term),
       ilike(productsTable.description, term),
+      ilike(productsTable.category, term),
     )!);
   }
 

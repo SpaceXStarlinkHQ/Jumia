@@ -116,20 +116,20 @@ const FIRMAN = {
 };
 
 // Apple iPad 10th generation — store.storeimages.cdn-apple.com is in allowlist
-// Confirmed: _FMT_WHH = white hero. _AV2/_AV3/_AV4 = standard gallery variants (may vary).
+// Confirmed live on 2026-07-26: _FMT_WHH = white hero ✓, _AV2_FMT_WHH ✓
+// AV3 and AV4 both return 404 — removed to prevent broken gallery images.
 const APPLE_IPAD = {
   select:  "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_FMT_WHH",
   gallery2:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_AV2_FMT_WHH",
-  gallery3:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_AV3_FMT_WHH",
-  gallery4:"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-10th-gen-finish-select-202212-silver-wifi_AV4_FMT_WHH",
 };
 
 // Logitech MX Master 3S — resource.logitech.com is in allowlist
+// Confirmed live on 2026-07-26: top ✓, side ✓, front ✓
+// bottom-view URL returns 404 — removed to prevent broken gallery images.
 // DO NOT add d_transparent.gif fallback segment — it returns a blank GIF
 const LOGITECH = {
   top:    "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-top-view-graphite.png",
   side:   "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-side-view-graphite.png",
-  bottom: "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-bottom-view-graphite.png",
   front:  "https://resource.logitech.com/w_692,c_lpad,ar_4:3,q_auto,f_auto,dpr_1.0/content/dam/logitech/en/products/mice/mx-master-3s/gallery/mx-master-3s-mouse-front-view-graphite.png",
 };
 
@@ -607,9 +607,8 @@ IN THE BOX: iPad, USB-C charge cable, USB-C 20W power adapter.`,
     imageUrl: APPLE_IPAD.select,
     images: [
       APPLE_IPAD.select,    // silver iPad 10th gen — product selection hero
-      APPLE_IPAD.gallery2,  // gallery view 2 (AV2 — Apple standard variant)
-      APPLE_IPAD.gallery3,  // gallery view 3 (AV3)
-      APPLE_IPAD.gallery4,  // gallery view 4 (AV4)
+      APPLE_IPAD.gallery2,  // gallery view 2 (AV2 — Apple standard variant, confirmed 200)
+      // AV3 and AV4 both returned 404 on 2026-07-26 — omitted
     ],
   },
 
@@ -732,10 +731,10 @@ IN THE BOX: Mouse, USB-C cable, USB receiver.`,
     // Note: DO NOT append d_transparent.gif — causes CDN to return blank GIF
     imageUrl: LOGITECH.top,
     images: [
-      LOGITECH.top,     // top-down view — product primary
-      LOGITECH.side,    // side profile — ergonomic shape
-      LOGITECH.bottom,  // bottom sensor / DPI details
-      LOGITECH.front,   // front view (may need verification)
+      LOGITECH.top,    // top-down view — product primary (confirmed 200)
+      LOGITECH.side,   // side profile — ergonomic shape (confirmed 200)
+      LOGITECH.front,  // front view (confirmed 200)
+      // bottom-view URL returned 404 on 2026-07-26 — omitted
     ],
   },
 

@@ -26,6 +26,8 @@ const CATEGORIES = [
   { name: "Supermarket",       emoji: "🛒" },
   { name: "Kitchen & Dining",  emoji: "🍳" },
   { name: "Health & Beauty",   emoji: "💄" },
+  { name: "Sporting Goods",    emoji: "⚽" },
+  { name: "Baby Products",     emoji: "🍼" },
 ];
 
 function FlashTimer() {
@@ -168,11 +170,11 @@ export default function Catalog() {
                 </Link>
               </div>
 
-              {/* Floating product image */}
+              {/* Floating product image — Firman SPG3000E2 (same SKU as database) */}
               <div className="absolute right-4 md:right-8 bottom-0 hidden md:block">
                 <img
-                  src={proxyImage("https://firmanpowerequipment.com/cdn/shop/products/P03601_200_900x900.png?v=1630521314")}
-                  alt=""
+                  src={proxyImage("https://firmanpowerequipment.com/cdn/shop/products/W03082_200_900x900.png")}
+                  alt="Sumec Firman Generator"
                   loading="lazy"
                   className="h-52 object-contain drop-shadow-2xl animate-float"
                   style={{ filter: "drop-shadow(0 16px 32px rgba(240,90,40,0.4))" }}
@@ -226,7 +228,7 @@ export default function Catalog() {
 
           {/* ── Category strip ──────────────────────────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm border border-card-border p-4 lg:hidden">
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {CATEGORIES.map(({ name, emoji }) => (
                 <Link
                   key={name}
@@ -253,7 +255,7 @@ export default function Catalog() {
                 </div>
                 <FlashTimer />
               </div>
-              <Link href="/" className="text-white/80 hover:text-white text-sm font-bold flex items-center gap-1 transition-colors">
+              <Link href="/?category=Electronics" className="text-white/80 hover:text-white text-sm font-bold flex items-center gap-1 transition-colors">
                 See All <ChevronRight className="w-4 h-4" />
               </Link>
             </div>

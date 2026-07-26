@@ -1,12 +1,14 @@
-// Varied promo discounts per product — realistic spread between 30–70%
-const DISCOUNTS: Record<number, number> = {
-  21: 65, 22: 58, 23: 62, 24: 65, 25: 60,
-  26: 55, 27: 48, 28: 42, 29: 35, 30: 50,
-  31: 38, 32: 45, 33: 40, 34: 52, 35: 56,
-  36: 47, 37: 30, 38: 44, 39: 36, 40: 33,
-};
+// Deterministic promo discounts — stable hash so every product ID always gets
+// the same value regardless of whether IDs are sequential or sparse.
+// Spread: 30–69% (realistic Nigerian e-commerce range).
+function deterministicDiscount(productId: number): number {
+  // Simple linear congruential hash — no imports needed
+  const h = ((productId * 2654435761) >>> 0) % 40;
+  return 30 + h; // 30–69
+}
+
 export function getDiscount(productId: number): number {
-  return DISCOUNTS[productId] ?? 40;
+  return deterministicDiscount(productId);
 }
 
 export function getOriginalPrice(priceKobo: number, productId: number) {
@@ -20,5 +22,6 @@ export function getRating(productId: number) {
 }
 
 export function getReviewCount(productId: number) {
-  return (productId * 17) % 200 + 5;
+  // Deterministic but varied: 5–497
+  return ((productId * 31 + 7) % 493) + 5;
 }
