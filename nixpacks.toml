@@ -1,9 +1,8 @@
 [phases.setup]
 nixPkgs = ["nodejs_20"]
-cmds = ["npm install -g pnpm@10.26.1 --ignore-scripts"]
 
 [phases.install]
-cmds = ["pnpm install --frozen-lockfile"]
+cmds = ["npm install -g pnpm@10.26.1 --ignore-scripts && pnpm install --frozen-lockfile"]
 
 [phases.build]
 cmds = ["node artifacts/api-server/build.mjs"]
