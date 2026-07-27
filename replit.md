@@ -45,9 +45,10 @@ pnpm --filter @workspace/db run seed
 
 | Secret | Description |
 |---|---|
-| `APP_DATABASE_URL` | PostgreSQL connection string |
 | `PAYSTACK_SECRET_KEY` | Paystack secret key for payments |
 | `SESSION_SECRET` | Session signing key |
+
+> `APP_DATABASE_URL` is optional — the API falls back to the Replit-managed `DATABASE_URL` automatically.
 
 ## User preferences
 
