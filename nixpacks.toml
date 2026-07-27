@@ -1,9 +1,9 @@
 [phases.setup]
 nixPkgs = ["nodejs_20"]
-cmds = ["corepack enable"]
+cmds = ["npm install -g pnpm@10.26.1 --ignore-scripts"]
 
 [phases.install]
-cmds = ["corepack prepare pnpm@10.26.1 --activate && pnpm install --frozen-lockfile"]
+cmds = ["pnpm install --frozen-lockfile"]
 
 [phases.build]
 cmds = ["node artifacts/api-server/build.mjs"]
