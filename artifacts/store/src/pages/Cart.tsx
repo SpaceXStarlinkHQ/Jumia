@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
@@ -9,6 +10,10 @@ import { getOriginalPrice } from "@/lib/jumia-mock";
 export default function Cart() {
   const { items, updateQuantity, removeItem, totalKobo, itemCount } = useCart();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    document.title = `Cart (${itemCount}) — BigDeals Nigeria`;
+  }, [itemCount]);
 
   if (items.length === 0) {
     return (
@@ -96,8 +101,9 @@ export default function Cart() {
                       </button>
                       <span className="flex-1 text-center font-medium text-sm">{item.quantity}</span>
                       <button 
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                        className="w-8 h-full flex items-center justify-center hover:bg-[#F68B1E] hover:border-[#F68B1E] hover:text-white text-[#F68B1E] transition-colors rounded-r"
+                        onClick={() => updateQuantity(item.productId, Math.min(10, item.quantity + 1))}
+                        disabled={item.quantity >= 10}
+                        className="w-8 h-full flex items-center justify-center hover:bg-[#F68B1E] hover:border-[#F68B1E] hover:text-white text-[#F68B1E] transition-colors rounded-r disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Plus className="w-3 h-3" />
                       </button>

@@ -1,10 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "node artifacts/api-server/build.mjs"
 
 [deploy]
 startCommand = "node artifacts/api-server/dist/index.mjs"
-healthcheckPath = "/api/products"
-healthcheckTimeout = 30
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3

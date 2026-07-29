@@ -3,7 +3,14 @@ import { logger } from "./lib/logger";
 
 // Validate required environment variables at startup so misconfiguration
 // surfaces immediately rather than failing silently during a user request.
-const REQUIRED_ENV_VARS = ["APP_DATABASE_URL", "PAYSTACK_SECRET_KEY", "SESSION_SECRET"] as const;
+// Either APP_DATABASE_URL or the runtime-managed DATABASE_URL must be present
+if (!process.env["APP_DATABASE_URL"] && !process.env["DATABASE_URL"]) {
+  throw new Error(
+    `A database connection is required. Set APP_DATABASE_URL in the Replit Secrets panel before starting the server.`,
+  );
+}
+
+const REQUIRED_ENV_VARS = ["PAYSTACK_SECRET_KEY", "SESSION_SECRET"] as const;
 for (const key of REQUIRED_ENV_VARS) {
   if (!process.env[key]) {
     throw new Error(

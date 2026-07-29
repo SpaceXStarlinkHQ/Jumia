@@ -15,7 +15,7 @@ export function Navbar() {
 
   const categories = [
     "Electronics", "Phones & Tablets", "Home & Office", "Fashion", "Computing",
-    "Supermarket", "Kitchen & Dining", "Health & Beauty",
+    "Supermarket", "Kitchen & Dining", "Health & Beauty", "Sporting Goods", "Baby Products",
   ];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -163,8 +163,12 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
               <li><Link href="/?category=Phones+%26+Tablets" className="hover:text-white transition-colors">Phones &amp; Tablets</Link></li>
               <li><Link href="/?category=Home+%26+Office" className="hover:text-white transition-colors">Home &amp; Office</Link></li>
               <li><Link href="/?category=Fashion" className="hover:text-white transition-colors">Fashion</Link></li>
+              <li><Link href="/?category=Computing" className="hover:text-white transition-colors">Computing</Link></li>
               <li><Link href="/?category=Supermarket" className="hover:text-white transition-colors">Supermarket</Link></li>
+              <li><Link href="/?category=Kitchen+%26+Dining" className="hover:text-white transition-colors">Kitchen &amp; Dining</Link></li>
               <li><Link href="/?category=Health+%26+Beauty" className="hover:text-white transition-colors">Health &amp; Beauty</Link></li>
+              <li><Link href="/?category=Sporting+Goods" className="hover:text-white transition-colors">Sporting Goods</Link></li>
+              <li><Link href="/?category=Baby+Products" className="hover:text-white transition-colors">Baby Products</Link></li>
             </ul>
           </div>
 
@@ -196,9 +200,9 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
               </li>
               <li className="text-gray-500 pt-1">Mon – Sat: 8am – 8pm</li>
               <li className="flex gap-4 text-white pt-1">
-                <span className="hover:text-[#F05A28] cursor-pointer transition-colors">Facebook</span>
-                <span className="hover:text-[#F05A28] cursor-pointer transition-colors">Instagram</span>
-                <span className="hover:text-[#F05A28] cursor-pointer transition-colors">X</span>
+                <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#F05A28] transition-colors">Facebook</a>
+                <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#F05A28] transition-colors">Instagram</a>
+                <a href="https://www.x.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#F05A28] transition-colors">X</a>
               </li>
             </ul>
           </div>
