@@ -10,14 +10,18 @@ if (!process.env["APP_DATABASE_URL"] && !process.env["DATABASE_URL"]) {
   );
 }
 
-const REQUIRED_ENV_VARS = ["PAYSTACK_SECRET_KEY", "SESSION_SECRET"] as const;
-for (const key of REQUIRED_ENV_VARS) {
-  if (!process.env[key]) {
-    throw new Error(
-      `Required environment variable "${key}" is missing. ` +
-        `Set it in the Replit Secrets panel before starting the server.`,
-    );
-  }
+// SESSION_SECRET is required — sessions won't work without it
+if (!process.env["SESSION_SECRET"]) {
+  throw new Error(
+    `Required environment variable "SESSION_SECRET" is missing. ` +
+      `Set it in the Replit Secrets panel before starting the server.`,
+  );
+}
+
+// PAYSTACK_SECRET_KEY is needed for payments but not for the rest of the API.
+// The checkout routes already return 500 gracefully when it's absent.
+if (!process.env["PAYSTACK_SECRET_KEY"]) {
+  logger.warn("PAYSTACK_SECRET_KEY is not set — checkout endpoints will be disabled until it is provided.");
 }
 
 const rawPort = process.env["PORT"];

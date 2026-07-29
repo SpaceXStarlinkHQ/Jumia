@@ -16,20 +16,23 @@ import {
 const router: IRouter = Router();
 
 async function fetchOrderWithItems(orderId: number) {
-  const [order] = await db
+  const rows = await db
     .select()
     .from(ordersTable)
+    .leftJoin(orderItemsTable, eq(orderItemsTable.orderId, ordersTable.id))
     .where(eq(ordersTable.id, orderId));
-  if (!order) return null;
 
-  const items = await db
-    .select()
-    .from(orderItemsTable)
-    .where(eq(orderItemsTable.orderId, orderId));
+  if (rows.length === 0) return null;
+
+  const order = rows[0].orders;
+  const items = rows
+    .filter((r) => r.order_items !== null)
+    .map((r) => r.order_items!);
 
   return { ...order, items };
 }
 
+// Requires ?email= — prevents listing every customer's orders without auth
 router.get("/orders", async (req, res): Promise<void> => {
   const query = ListOrdersQueryParams.safeParse(req.query);
   if (!query.success) {
@@ -37,22 +40,23 @@ router.get("/orders", async (req, res): Promise<void> => {
     return;
   }
 
-  const conditions: SQL[] = [];
-  if (query.data.email) {
-    conditions.push(eq(ordersTable.customerEmail, query.data.email));
+  if (!query.data.email) {
+    res.status(400).json({ error: "email query parameter is required" });
+    return;
   }
+
+  const conditions: SQL[] = [
+    eq(ordersTable.customerEmail, query.data.email),
+  ];
   if (query.data.status) {
     conditions.push(eq(ordersTable.status, query.data.status));
   }
 
-  const orders =
-    conditions.length > 0
-      ? await db
-          .select()
-          .from(ordersTable)
-          .where(and(...conditions))
-          .orderBy(ordersTable.createdAt)
-      : await db.select().from(ordersTable).orderBy(ordersTable.createdAt);
+  const orders = await db
+    .select()
+    .from(ordersTable)
+    .where(and(...conditions))
+    .orderBy(ordersTable.createdAt);
 
   res.json(ListOrdersResponse.parse(orders));
 });
@@ -64,20 +68,21 @@ router.get("/orders/reference/:reference", async (req, res): Promise<void> => {
     return;
   }
 
-  const [order] = await db
+  const rows = await db
     .select()
     .from(ordersTable)
+    .leftJoin(orderItemsTable, eq(orderItemsTable.orderId, ordersTable.id))
     .where(eq(ordersTable.paystackReference, params.data.reference));
 
-  if (!order) {
+  if (rows.length === 0) {
     res.status(404).json({ error: "Order not found" });
     return;
   }
 
-  const items = await db
-    .select()
-    .from(orderItemsTable)
-    .where(eq(orderItemsTable.orderId, order.id));
+  const order = rows[0].orders;
+  const items = rows
+    .filter((r) => r.order_items !== null)
+    .map((r) => r.order_items!);
 
   res.json(GetOrderByReferenceResponse.parse({ ...order, items }));
 });

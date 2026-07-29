@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { ShoppingCart, Truck, Shield, Phone, Mail, Zap } from "lucide-react";
+import { ShoppingCart, Truck, Shield, Phone, Mail } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { useListCategories } from "@workspace/api-client-react";
+
+const FALLBACK_CATEGORIES = [
+  "Electronics", "Phones & Tablets", "Home & Office", "Fashion", "Computing",
+  "Supermarket", "Kitchen & Dining", "Health & Beauty", "Sporting Goods", "Baby Products",
+];
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
   const { itemCount } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: categoriesData } = useListCategories();
+  const categories = categoriesData ?? FALLBACK_CATEGORIES;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setSearchQuery(params.get("search") || "");
   }, [location]);
-
-  const categories = [
-    "Electronics", "Phones & Tablets", "Home & Office", "Fashion", "Computing",
-    "Supermarket", "Kitchen & Dining", "Health & Beauty", "Sporting Goods", "Baby Products",
-  ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
