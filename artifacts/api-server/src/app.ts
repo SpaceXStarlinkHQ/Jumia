@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
@@ -31,6 +31,8 @@ app.use(
 const FRONTEND_URL = process.env["FRONTEND_URL"];
 const allowedOrigins: (string | RegExp)[] = [
   /\.vercel\.app$/,
+  /\.replit\.app$/,
+  /\.replit\.dev$/,
   /localhost/,
   "https://bigdealsnigeria.shop",
   "https://www.bigdealsnigeria.shop",
@@ -57,6 +59,29 @@ app.use("/api", router);
 // Redirect bare root to the storefront (dev: in-Replit, prod: Vercel URL)
 app.get("/", (_req, res) => {
   res.redirect(301, FRONTEND_URL ?? "/store/");
+});
+
+// Browser auto-requests /favicon.ico from the domain root.
+// Redirect it to the store's actual SVG favicon so the browser tab icon works.
+app.get("/favicon.ico", (_req, res) => {
+  res.redirect(302, "/store/favicon.svg");
+});
+
+// Global JSON error handler — must have exactly 4 parameters.
+// Express 5 automatically forwards unhandled async errors here.
+// Without this, Express falls back to its default HTML error page,
+// which causes the frontend API client to throw a ResponseParseError.
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  const rawStatus =
+    typeof err === "object" && err !== null
+      ? Number((err as Record<string, unknown>)["status"] ?? (err as Record<string, unknown>)["statusCode"] ?? 500)
+      : 500;
+  const status = Number.isFinite(rawStatus) && rawStatus >= 400 && rawStatus < 600 ? rawStatus : 500;
+  const message = err instanceof Error ? err.message : "Internal server error";
+  logger.error({ err }, "Unhandled route error");
+  if (!res.headersSent) {
+    res.status(status).json({ error: message });
+  }
 });
 
 export default app;

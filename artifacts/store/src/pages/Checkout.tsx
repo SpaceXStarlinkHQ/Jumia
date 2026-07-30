@@ -10,7 +10,6 @@ import { ChevronRight, CheckCircle2, Lock, ShoppingCart, MapPin, Phone } from "l
 import { proxyImage } from "@/lib/imageProxy";
 import { NoImage } from "@/components/ui/no-image";
 import { useToast } from "@/hooks/use-toast";
-import { ToastAction } from "@/components/ui/toast";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
@@ -85,19 +84,17 @@ export default function Checkout() {
       }
     }, {
       onSuccess: (res) => { window.location.href = res.paystackUrl; },
-      onError: () => {
+      onError: (error) => {
+        // ApiError message format: "HTTP {status} {statusText}: {detail}"
+        // Strip the HTTP prefix so users see a plain, actionable message.
+        const rawMsg = error instanceof Error ? error.message : "";
+        const userMsg =
+          rawMsg.replace(/^HTTP \d+ [^:]+:\s*/i, "").trim() ||
+          "Could not initiate payment. Please try again.";
         toast({
           variant: "destructive",
-          title: "Checkout failed",
-          description: "Could not initiate payment. Complete your order on our live store at www.bigdealsnigeria.shop",
-          action: (
-            <ToastAction
-              altText="Go to live store"
-              onClick={() => window.open("https://www.bigdealsnigeria.shop", "_blank")}
-            >
-              Go to live store
-            </ToastAction>
-          ),
+          title: "Payment could not be started",
+          description: userMsg,
         });
       }
     });

@@ -3,15 +3,15 @@ import { useParams, Link } from "wouter";
 import { useVerifyPayment, useGetOrderByReference } from "@workspace/api-client-react";
 import { useCart } from "@/lib/cart";
 import { formatNaira } from "@/lib/utils";
-import { CheckCircle2, Package, AlertCircle, ShoppingBag, Truck } from "lucide-react";
+import { CheckCircle2, Package, AlertCircle, ShoppingBag, Truck, Clock, XCircle } from "lucide-react";
 
 export default function OrderConfirmation() {
   const { reference } = useParams<{ reference: string }>();
   const { clearCart } = useCart();
   const clearedRef = useRef(false);
 
-  // Trigger payment verification in the background
-  const { data: verificationResult } = useVerifyPayment(reference || "", {
+  // Trigger payment verification in the background — updates order status server-side
+  useVerifyPayment(reference || "", {
     query: { enabled: !!reference, queryKey: ["/api/checkout/verify", reference] }
   });
 
@@ -65,15 +65,28 @@ export default function OrderConfirmation() {
     }
   };
 
+  const isPaid = order.status === "paid" || order.status === "shipped" || order.status === "delivered";
+  const isCancelled = order.status === "cancelled";
+  const isPending = !isPaid && !isCancelled;
+
+  const statusHeader = isPaid
+    ? { icon: <CheckCircle2 className="w-8 h-8" />, iconBg: "bg-[#E8F5E9] text-[#3CB64A] border-[#3CB64A]/20", title: "Order Confirmed!", subtitle: `Hi ${order.customerName.split(' ')[0]}, thank you for shopping with BigDeals Nigeria.` }
+    : isCancelled
+    ? { icon: <XCircle className="w-8 h-8" />, iconBg: "bg-[#FFEBEE] text-[#C62828] border-[#C62828]/20", title: "Order Cancelled", subtitle: "This order has been cancelled. If you were charged, please contact support." }
+    : { icon: <Clock className="w-8 h-8" />, iconBg: "bg-[#FFF3E0] text-[#E65100] border-[#E65100]/20", title: "Payment Pending", subtitle: `Hi ${order.customerName.split(' ')[0]}, your order is awaiting payment confirmation. If you completed payment, it may take a moment to reflect.` };
+
   return (
     <div className="max-w-3xl mx-auto pb-10 mt-4">
       <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden mb-4">
         <div className="p-8 text-center border-b border-gray-100 bg-[#F5F5F5]/50">
-          <div className="w-16 h-16 bg-[#E8F5E9] text-[#3CB64A] rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-[#3CB64A]/20">
-            <CheckCircle2 className="w-8 h-8" />
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border ${statusHeader.iconBg}`}>
+            {statusHeader.icon}
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Order Confirmed!</h1>
-          <p className="text-gray-600 text-sm">Hi {order.customerName.split(' ')[0]}, thank you for shopping with BigDeals Nigeria.</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">{statusHeader.title}</h1>
+          <p className="text-gray-600 text-sm">{statusHeader.subtitle}</p>
+          {isPending && (
+            <p className="text-xs text-[#E65100] mt-2 font-medium">Reference: {order.paystackReference}</p>
+          )}
         </div>
 
         <div className="p-6">

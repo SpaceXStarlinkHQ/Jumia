@@ -223,12 +223,12 @@ export default function ProductDetail() {
 
   return (
     <div className="pb-10">
-      {/* Product data consistency warning — shown only when validation issues are found */}
-      {!consistency.ok && (
+      {/* Product data consistency warning — development only */}
+      {import.meta.env.DEV && !consistency.ok && (
         <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 flex items-start gap-2.5 text-sm text-amber-800">
           <span className="shrink-0 mt-0.5">⚠️</span>
           <div>
-            <span className="font-semibold">Product data notice: </span>
+            <span className="font-semibold">Dev notice: </span>
             {consistency.warnings.join(" · ")}
           </div>
         </div>
