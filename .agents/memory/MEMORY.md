@@ -1,4 +1,4 @@
 - [Store architecture](store-arch.md) — online store with Paystack; key design decisions and route conventions
 - [Unsplash image IDs](unsplash-image-ids.md) — confirmed-working photo IDs for seed.ts; list of broken IDs and blocked external hosts
 - [Catalog validation](catalog-validation.md) — how to run and interpret the product catalog validator; known limitations
-- [Railway deployment](railway-deployment.md) — Jumia health check fails when Railway has no initialized products schema
+- [Railway deployment](railway-deployment.md) — live service IDs, domains, nixpacks pnpm fix, Vercel config; full stack live at bigdealsnigeria.shop

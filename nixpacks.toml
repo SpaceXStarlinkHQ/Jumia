@@ -2,8 +2,7 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-# Install pnpm globally then use its absolute path so the same shell can find it
-cmds = ["npm install -g pnpm@10.26.1 --ignore-scripts && $(npm config get prefix)/bin/pnpm install --frozen-lockfile"]
+cmds = ["npm install -g pnpm@10.26.1 --ignore-scripts && pnpm install --frozen-lockfile"]
 
 [phases.build]
 cmds = ["node artifacts/api-server/build.mjs"]
