@@ -73,7 +73,7 @@ export default function OrderConfirmation() {
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">Order Confirmed!</h1>
-          <p className="text-gray-600 text-sm">Hi {order.customerName.split(' ')[0]}, thank you for shopping with Jumia.</p>
+          <p className="text-gray-600 text-sm">Hi {order.customerName.split(' ')[0]}, thank you for shopping with BigDeals Nigeria.</p>
         </div>
 
         <div className="p-6">

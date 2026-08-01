@@ -10,12 +10,15 @@ import { getDiscount, getOriginalPrice, getRating, getReviewCount } from "@/lib/
 import { proxyImage } from "@/lib/imageProxy";
 import React from "react";
 
+// ── Delivery estimate ─────────────────────────────────────────────────────────
+// Dynamically calculates 3–4 business days from now (skips weekends).
+// Orders placed before 3:00 PM dispatch same day (+3 business days);
+// orders after 3:00 PM dispatch next working day (+4 business days).
 function getDeliveryEstimate(): string {
   const now = new Date();
-  // 3-5 business days; if ordered before 3pm add 3 days, else 4 days
   const hourNow = now.getHours();
   const daysToAdd = hourNow < 15 ? 3 : 4;
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const days   = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const est = new Date(now);
   let added = 0;
@@ -27,18 +30,89 @@ function getDeliveryEstimate(): string {
   return `${days[est.getDay()]}, ${months[est.getMonth()]} ${est.getDate()}`;
 }
 
+// ── Brand extraction ─────────────────────────────────────────────────────────
+// Derives the brand name from the product title for affinity-based sorting.
+const KNOWN_BRANDS = [
+  "Polo Ralph Lauren", "Ralph Lauren",     // longest first — greedy match
+  "LG", "Samsung", "Hisense", "Haier", "Thermocool", "Firman", "Sumec", "Scanfrost",
+  "HP", "Lenovo", "Logitech", "Apple", "Tecno", "Infinix", "Anker", "Soundcore",
+  "Nike", "Decathlon", "Domyos",
+  "Dangote", "Milo", "Nestlé", "Nestle", "Indomie",
+  "Binatone", "Fisher-Price", "Pampers", "Philips", "Neutrogena", "ORS",
+  "Baby Trend", "Morning Glory",
+] as const;
+
+function extractBrand(productName: string): string {
+  const lower = productName.toLowerCase();
+  for (const brand of KNOWN_BRANDS) {
+    if (lower.includes(brand.toLowerCase())) return brand;
+  }
+  return "";
+}
+
+// ── Product image validation ──────────────────────────────────────────────────
+// Returns true if all required fields are present and internally consistent.
+function isProductConsistent(product: {
+  name: string;
+  imageUrl: string | null | undefined;
+  images: string[];
+  description: string;
+  priceKobo: number;
+}): { ok: boolean; warnings: string[] } {
+  const warnings: string[] = [];
+  if (!product.name || product.name.trim().length < 3) warnings.push("Product name is missing or too short.");
+  if (!product.description || product.description.trim().length < 20) warnings.push("Description is missing.");
+  if (product.priceKobo <= 0) warnings.push("Price is zero or negative.");
+  if (!product.images || product.images.length === 0) warnings.push("No product images available.");
+  else if (product.imageUrl && product.images[0] !== product.imageUrl) warnings.push("Primary image mismatch.");
+  return { ok: warnings.length === 0, warnings };
+}
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const productId = parseInt(id, 10);
+
+  // Update page title when product loads
+  useEffect(() => {
+    document.title = "Loading... — BigDeals Nigeria";
+  }, [productId]);
   const [, setLocation] = useLocation();
   const { data: product, isLoading, error } = useGetProduct(productId, {
     query: { enabled: !isNaN(productId), queryKey: ["/api/products", productId] }
   });
 
+  // Fetch related products by category; also fetch same-brand products across all categories
   const { data: relatedProducts } = useListProducts(
     { category: product?.category },
     { query: { enabled: !!product?.category, queryKey: ["/api/products", { category: product?.category }] } }
   );
+
+  // Compute sorted, deduplicated, brand-affinity related product list
+  const sortedRelated = React.useMemo(() => {
+    if (!relatedProducts || !product) return [];
+
+    const currentBrand = extractBrand(product.name);
+    const seen = new Set<number>();
+    seen.add(product.id); // exclude current product
+
+    // De-duplicate and split into same-brand vs other
+    const sameBrand: typeof relatedProducts = [];
+    const otherBrand: typeof relatedProducts = [];
+
+    for (const rp of relatedProducts) {
+      if (seen.has(rp.id)) continue;
+      seen.add(rp.id);
+      const rpBrand = extractBrand(rp.name);
+      if (currentBrand && rpBrand === currentBrand) {
+        sameBrand.push(rp);
+      } else {
+        otherBrand.push(rp);
+      }
+    }
+
+    // Same brand first, then others — cap total at 10
+    return [...sameBrand, ...otherBrand].slice(0, 10);
+  }, [relatedProducts, product]);
 
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -57,6 +131,13 @@ export default function ProductDetail() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Update title once product data arrives
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} — BigDeals Nigeria`;
+    }
+  }, [product]);
 
   if (isNaN(productId)) {
     return <div>Invalid product ID</div>;
@@ -107,6 +188,15 @@ export default function ProductDetail() {
       ? [product.imageUrl]
       : [];
 
+  // Run product consistency validation — shown as a dismissible warning banner
+  const consistency = isProductConsistent({
+    name: product.name,
+    imageUrl: product.imageUrl,
+    images: allImages,
+    description: product.description,
+    priceKobo: product.priceKobo,
+  });
+
   const mainImage = allImages[selectedImageIdx] ?? null;
 
   const handleAddToCart = () => {
@@ -133,6 +223,17 @@ export default function ProductDetail() {
 
   return (
     <div className="pb-10">
+      {/* Product data consistency warning — shown only when validation issues are found */}
+      {!consistency.ok && (
+        <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 flex items-start gap-2.5 text-sm text-amber-800">
+          <span className="shrink-0 mt-0.5">⚠️</span>
+          <div>
+            <span className="font-semibold">Product data notice: </span>
+            {consistency.warnings.join(" · ")}
+          </div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <div className="flex items-center text-xs text-gray-500 mb-4 gap-1.5 min-w-0">
         <Link href="/" className="hover:text-gray-800 shrink-0">Home</Link>
@@ -248,7 +349,12 @@ export default function ProductDetail() {
               <span className="text-gray-400 line-through text-lg">{formatNaira(origPrice)}</span>
               <span className="bg-red-100 text-[#E53935] text-xs font-bold px-2 py-0.5 rounded">-{discount}%</span>
             </div>
-            <div className="text-xs text-gray-500 mb-2">Few units left</div>
+            {product.stock > 0 && product.stock <= 10 && (
+              <div className="text-xs text-red-500 font-semibold mb-2">Only {product.stock} left in stock — order soon!</div>
+            )}
+            {product.stock > 10 && (
+              <div className="text-xs text-gray-500 mb-2">In stock</div>
+            )}
             <div className="flex flex-col gap-1.5 mt-3">
               <div className="flex items-center text-[#3CB64A] text-sm font-medium gap-1.5">
                 <Truck className="w-4 h-4 shrink-0" />
@@ -341,23 +447,31 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* You May Also Like */}
-      {relatedProducts && relatedProducts.length > 1 && (
+      {/* You May Also Like — sorted by brand affinity, deduplicated, max 10 */}
+      {sortedRelated.length > 0 && (
         <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
           <h3 className="bg-white text-gray-800 font-medium px-4 py-3 border-b border-gray-100 text-lg">You May Also Like</h3>
           <div className="p-2 overflow-x-auto no-scrollbar">
             <div className="flex gap-2 min-w-max pb-2">
-              {relatedProducts.filter(p => p.id !== product.id).map(rp => {
+              {sortedRelated.map(rp => {
                 const rpOrigPrice = getOriginalPrice(rp.priceKobo, rp.id);
                 const rpDiscount = getDiscount(rp.id);
                 const rpRating = getRating(rp.id);
                 const rpImg = (rp.images && rp.images.length > 0) ? rp.images[0] : rp.imageUrl;
+                const rpBrand = extractBrand(rp.name);
+                const currentBrand = extractBrand(product.name);
+                const isSameBrand = currentBrand && rpBrand === currentBrand;
 
                 return (
                   <Link key={rp.id} href={`/products/${rp.id}`} className="w-[180px] shrink-0 p-2 hover:shadow-md transition-shadow rounded group bg-white flex flex-col border border-transparent hover:border-gray-200 relative">
                     <div className="absolute top-2 right-2 bg-red-100 text-[#E53935] text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
                       -{rpDiscount}%
                     </div>
+                    {isSameBrand && (
+                      <div className="absolute top-2 left-2 bg-[#F68B1E]/10 text-[#F68B1E] text-[9px] font-bold px-1.5 py-0.5 rounded z-10 uppercase tracking-wide">
+                        {rpBrand}
+                      </div>
+                    )}
                     <div className="aspect-square relative mb-2 overflow-hidden rounded">
                       {rpImg ? (
                         <>
@@ -365,7 +479,7 @@ export default function ProductDetail() {
                             src={proxyImage(rpImg)}
                             alt={rp.name}
                             loading="lazy"
-                            className="w-full h-full object-cover mix-blend-multiply"
+                            className="w-full h-full object-contain mix-blend-multiply p-1"
                             onError={(e) => {
                               e.currentTarget.style.display = "none";
                               const fb = e.currentTarget.nextElementSibling as HTMLElement | null;

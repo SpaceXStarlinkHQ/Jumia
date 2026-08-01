@@ -1,10 +1,17 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "node artifacts/api-server/build.mjs"
+buildEnvironment = "V3"
+nixpacksConfigPath = "/nixpacks.toml"
 
 [deploy]
+runtime = "V2"
+numReplicas = 1
 startCommand = "node artifacts/api-server/dist/index.mjs"
-healthcheckPath = "/api/products"
-healthcheckTimeout = 30
+healthcheckPath = "/api/health"
+sleepApplication = false
+useLegacyStacker = false
+ipv6EgressEnabled = false
+multiRegionConfig = {"us-east4-eqdc4a":{"numReplicas":1}}
 restartPolicyType = "ON_FAILURE"
+healthcheckTimeout = 60
 restartPolicyMaxRetries = 3

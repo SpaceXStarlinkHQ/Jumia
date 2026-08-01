@@ -1,0 +1,20 @@
+# Exclude files that are not needed for the Railway API build.
+# Railway uses this file like .dockerignore to shrink the build context.
+
+# All Replit workspace screenshots and uploaded assets
+attached_assets/
+
+# Design canvas and mockup sandbox (frontend-only, not deployed to Railway)
+artifacts/mockup-sandbox/
+artifacts/store/
+
+# Replit-specific local state
+.local/
+.agents/
+.cache/
+
+# Docs and scripts not needed at runtime
+DEPLOYMENT.md
+vercel.json
+artifacts/api-server/vercel.json
+artifacts/store/vercel.json

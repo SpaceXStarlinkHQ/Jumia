@@ -1,2 +1,6 @@
 - [Store architecture](store-arch.md) — online store with Paystack; key design decisions and route conventions
 - [Unsplash image IDs](unsplash-image-ids.md) — confirmed-working photo IDs for seed.ts; list of broken IDs and blocked external hosts
+- [Catalog validation](catalog-validation.md) — how to run and interpret the product catalog validator; known limitations
+- [Railway deployment](railway-deployment.md) — Jumia health check fails when Railway has no initialized products schema
+- [GitHub remote setup](github-remote.md) — origin now points to SpaceXStarlinkHQ/Jumia; merge strategy when Jumia diverges
+- [Validate catalog checks](catalog-validation.md) — model number + CDN brand alignment checks added; 6 products still missing SKUs in descriptions

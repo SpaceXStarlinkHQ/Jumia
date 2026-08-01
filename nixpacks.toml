@@ -1,4 +1,8 @@
-# Override pnpm install to include devDependencies needed for the build step.
-# NODE_ENV is reset to production by Railway's env vars at runtime.
 [phases.install]
-cmds = ["NODE_ENV=development pnpm install --no-frozen-lockfile"]
+cmds = ["npm install -g pnpm@10.26.1 --ignore-scripts && pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm --filter @workspace/api-server build"]
+
+[start]
+cmd = "node artifacts/api-server/dist/index.mjs"

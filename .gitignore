@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Uploaded screenshot assets (not part of source)
+attached_assets/Screenshot_*.jpg
+attached_assets/Screenshot_*.png
