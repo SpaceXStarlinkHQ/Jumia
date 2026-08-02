@@ -20,6 +20,10 @@ RUN pnpm install --frozen-lockfile
 # Build the API server
 RUN pnpm --filter @workspace/api-server build
 
+# Run as non-root for security hardening
+RUN groupadd --system appgroup && useradd --system --gid appgroup appuser
+USER appuser
+
 EXPOSE 8080
 
 CMD ["node", "artifacts/api-server/dist/index.mjs"]

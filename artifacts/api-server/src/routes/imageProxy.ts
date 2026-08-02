@@ -10,6 +10,7 @@ const router = Router();
 // Only these hostnames may be proxied. Extend here when adding new image CDNs.
 const ALLOWED_HOSTS = new Set([
   "images.unsplash.com",
+  "images.pexels.com",
   "resource.logitech.com",
   "store.storeimages.cdn-apple.com",
   "techmall-images-repo.s3.eu-west-2.amazonaws.com",
